@@ -8,12 +8,12 @@
 #include "stack.h"
 
 //don't call unless moving
-static inline void printPan(VideoBuffer &vid, UID uid, int16_t panx, int16_t &buffered) {
+static inline void printPan(UID uid) {
 	//LOG("PrintPan for %d,%d\n", uid, buffered);
-	if (buffered == -17) {
-		vid.setWindow(80, 48);//reset moving window
-	}
-	vid.bg0.setPanning(vec(panx % (18 * 8), 80));
+	changeWindow(uid, 2);
+	
+	int16_t panx = player[uid].scroller.position;
+	player[uid].vid.bg0.setPanning(vec(panx % (18 * 8), 80));
 
 	//x=0~16 时 buffered=1，此时缓冲的区域为8格桌面+2.5张牌
 
@@ -23,6 +23,7 @@ static inline void printPan(VideoBuffer &vid, UID uid, int16_t panx, int16_t &bu
 	int8_t loadcardfirst;//要加载的第一张牌的序号
 	int8_t loadcardcount;//要加载的牌的数量，1~5张
 
+	int16_t buffered = player[uid].viewbuffer;
 	int16_t newbuffered;
 
 	if (panx > buffered * 8 + 8) {//panx大，加载右侧图片
@@ -72,17 +73,18 @@ static inline void printPan(VideoBuffer &vid, UID uid, int16_t panx, int16_t &bu
 
 			if (idthis < 0) {
 				for (uint8_t j = 0; j < 5; j++) {
-					vid.bg0.image(vec(i % 18, 11 + j), BackGroundPic, g_random.randrange(8));
+					player[uid].vid.bg0.image(vec(i % 18, 11 + j), BackGroundPic, g_random.randrange(8));
 				}
 			} else {
-				vid.bg0.image(vec(i % 18, 11), vec(1, 5), CardPic, vec(i & 3, 0), idthis);
+				player[uid].vid.bg0.image(vec(i % 18, 11), vec(1, 5), CardPic, vec(i & 3, 0), idthis);
 			}
 		}
-		buffered = newbuffered;
+		player[uid].viewbuffer = newbuffered;
 	}
 }
 
-static inline void printNoPan(VideoBuffer &vid, UID uid, int8_t pancount) {
+//this is called only when playing/receiving cards
+static inline void printNoPan(UID uid, int8_t pancount) {
 	CARDID id[5] = {-1, -1, -1, -1, -1};
 	getPlayerCards(uid, pancount - 2, 5, id);
 	id[2] = -1;
@@ -90,16 +92,15 @@ static inline void printNoPan(VideoBuffer &vid, UID uid, int8_t pancount) {
 		CARDID idthis = id[(i + 2) >> 2];
 		if (idthis < 0) {
 			for (uint8_t j = 0; j < 5; j++) {
-				vid.bg0.image(vec(i, (uint8_t)(11 + j)), BackGroundPic, g_random.randrange(8));
+				player[uid].vid.bg0.image(vec(i, (uint8_t)(11 + j)), BackGroundPic, g_random.randrange(8));
 			}
 		} else {
-			vid.bg0.image(vec(i, (uint8_t)11), vec(1, 5), CardPic, vec((i + 2) & 3, 0), idthis);
+			player[uid].vid.bg0.image(vec(i, (uint8_t)11), vec(1, 5), CardPic, vec((i + 2) & 3, 0), idthis);
 		}
 		
 	}
-	
-	vid.setDefaultWindow();
-	vid.bg0.setPanning(vec(0, 0));
+	player[uid].viewbuffer = -17;
+	changeWindow(uid, 0);
 }
 
 void animUpdateScroll(PLAYERMASK mask, UID popupPlayer) {	
@@ -172,8 +173,8 @@ void animUpdateScroll(PLAYERMASK mask, UID popupPlayer) {
 						player[i].vid.bg1.image(vec(0, 0), CardPic, popupcardid);
 						player[i].vid.bg1.setPanning(vec(-48, -8));
 					} else {							//just starting: erase popup layer
-						//player[i].vid.bg1.setPanning(vec(-48, -8));
 						player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+						player[i].vid.bg1.setPanning(vec(-48, -8));//avoid popup card flashing
 					}
 				} else {	//same state, same user, play animation
 					if (!player[i].scroller.status) {//stopped
@@ -191,7 +192,7 @@ void animUpdateScroll(PLAYERMASK mask, UID popupPlayer) {
 			}
 
 			if (doUpdatePan) {
-				printPan(player[i].vid, i, player[i].scroller.position, player[i].viewbuffer);
+				printPan(i);
 			}
 		}
 	}
@@ -212,13 +213,10 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
 			if (i == drawuid) {
 				//reset pan for receiveing user, because we have to access the under layer
-				printNoPan(player[i].vid, i, player[i].scroller.maxcount);
+				printNoPan(i, player[i].scroller.maxcount);
 			} else {
-				//part window
-				if (player[i].vid.windowFirstLine() != 0 || player[i].vid.windowNumLines() < 71) {
-					player[i].vid.setWindow(0, 88);
-					player[i].vid.bg0.setPanning(vec(0, 0));
-				}				
+				//upper window
+				changeWindow(i, 1);
 			}
 			player[i].vid.bg1.image(vec(0, 0), CardPic, 54);
 		}
@@ -255,7 +253,6 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 	//clean all
 	for (UID i = 0; i < 12; i++) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			player[i].viewbuffer = -17;
 			if (i != drawuid) {
 				//others: erase bg1
 				player[i].vid.bg1.setPanning(vec(-24, 48));
@@ -268,7 +265,6 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 					//print to bg0 then erase bg1
 					player[i].vid.bg0.image(vec(6, 11), vec(4, 5), CardPic, vec(0, 0), cardid);
 					player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-					
 				} else {
 					//set bg1 pos
 					player[i].vid.bg1.setPanning(vec(-48, -88));
@@ -288,7 +284,6 @@ void animPlayCard(UID playuid, CARDID cardid) {
 	int pan0y; //original pany for playing user
 
 	System::finish();
-	printNoPan(player[playuid].vid, playuid, player[playuid].scroller.stop_count);
 
 	//init mode
 	
@@ -296,16 +291,14 @@ void animPlayCard(UID playuid, CARDID cardid) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
 			if (i == playuid) {
 				//full window
-				ASSERT(player[i].vid.windowFirstLine() == 0);
-				ASSERT(player[i].vid.windowNumLines() >= 128);
-				ASSERT(player[i].vid.bg0.getPanning() == vec(0, 0));
+				printNoPan(i, player[playuid].scroller.stop_count);
+
 				pan0y = player[i].vid.bg1.getPanning().y - 80;//add windows pan
 				ASSERT(player[i].vid.bg1.getPanning().x == -48);
-				//no need to paint this card
+				//no need to paint this card again
 			} else {
-				//part window
-				player[i].vid.setWindow(0, 88);
-				player[i].vid.bg0.setPanning(vec(0, 0));
+				//upper window
+				changeWindow(i, 1);
 
 				//paint card
 				player[i].vid.bg1.image(vec(0, 0), CardPic, cardid);
@@ -345,7 +338,6 @@ void animPlayCard(UID playuid, CARDID cardid) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
 			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
 			player[i].vid.bg0.image(vec(9, 3), CardPic, cardid);
-			player[i].viewbuffer = -17;
 		}
 	}
 	System::paint();
@@ -384,8 +376,7 @@ void animDrawN(uint8_t n) {
 	for (UID i = 0; i < 12; i++) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
 			//part window
-			player[i].vid.setWindow(0, 88);
-			player[i].vid.bg0.setPanning(vec(0, 0));
+			changeWindow(i, 1);
 
 			//paint card(?) TODO
 			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);

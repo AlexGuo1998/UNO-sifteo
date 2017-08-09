@@ -122,10 +122,9 @@ inline uint8_t selectColor(UID nowplayer) {
 					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
 					System::paint();
 				}
-				player[nowplayer].vid.setWindow(80, 48);
+				changeWindow(nowplayer, 2);
 			} else {
-				player[nowplayer].vid.setWindow(0, 88);
-				player[nowplayer].vid.bg0.setPanning(vec(0, 0));
+				changeWindow(nowplayer, 1);
 				player[nowplayer].vid.sprites[0].setImage(ArrowDownPic, 0);
 			}
 		}
@@ -223,15 +222,14 @@ void PlaySingleGame(void) {
 					lastcolor = selectColor(nowplayer);
 					player[nowplayer].cid.detachMotionBuffer();
 					
-					System::finish();
 					//popup
 					for (uint8_t i = 0; i < 12; i++) {
 						if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
+							changeWindow(nowplayer, 1);
 							player[i].vid.bg0.image(vec(13, 3), BubblePic, 0);
 							player[i].vid.bg0.image(vec(14, 4), WildColorPic, lastcolor);
 						}
 					}
-
 					System::paint(); System::finish();
 				}
 
@@ -398,12 +396,12 @@ void PlaySingleGame(void) {
 				animUpdateScroll(playerOn, nowplayer);
 				player[nowplayer].vid.bg1.image(vec(0, 0), BlankCard, 0);
 
+				//loop to prevent the calling of finish
 				for (uint8_t i = 0; i < 10; i++) {
 					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
 					System::paint();
 					if (i == 7) {
-						player[nowplayer].vid.setWindow(0, 88);
-						player[nowplayer].vid.bg0.setPanning(vec(0, 0));
+						changeWindow(nowplayer, 1);
 					}
 				}
 
@@ -429,7 +427,6 @@ void PlaySingleGame(void) {
 					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
 					System::paint();
 				}
-				player[nowplayer].vid.setWindow(80, 48);
 			}
 
 			if (!played) {

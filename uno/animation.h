@@ -27,10 +27,8 @@ inline void animDiscardCard(PLAYERMASK mask, CARDID cardid) {
 	
 	for (UID i = 0; i < 12; i++) {
 		if (mask & (PLAYERMASK)(0x80000000 >> i)) {
-			//part window
-			ASSERT(player[i].vid.windowFirstLine() == 0);
-			ASSERT(player[i].vid.windowNumLines() >= 71);
-			ASSERT(player[i].vid.bg0.getPanning() == vec(0, 0));
+			//upper window
+			ASSERT(player[i].displaypart <= 1);
 
 			//player[i].vid.bg1.fillMask(vec(0, 0), vec(4, 6));
 			//player[i].vid.bg1.setPanning()
@@ -82,3 +80,37 @@ inline void paintDefBg(UID id) {
 }
 
 void animDrawN(uint8_t n);
+
+//change a player's window
+//mode:0=force fullscreen 1=upper/full 2=force bottom
+inline void changeWindow(UID uid, uint8_t mode) {
+	switch (mode) {
+	case 0:
+		//this only happens when the user is receiving a card, or user is playing a card.
+		//must be called after printNoPan
+		if (player[uid].displaypart) {
+			ASSERT(player[uid].viewbuffer = -17);
+			player[uid].vid.setDefaultWindow();
+			player[uid].displaypart = 0;
+			player[uid].vid.bg0.setPanning(vec(0, 0));// ?
+		}
+		break;
+	case 1:
+		if (player[uid].displaypart == 2) {
+			player[uid].vid.setWindow(0, 88);
+			player[uid].displaypart = 1;
+			player[uid].vid.bg0.setPanning(vec(0, 0));
+		}
+		//else: no need to change
+		break;
+	case 2:
+		if (player[uid].displaypart != 2) {
+			player[uid].vid.setWindow(80, 48);
+			player[uid].displaypart = 2;
+			player[uid].vid.bg0.setPanning(vec(0, 0));//TODO ?
+		}
+		break;
+	default:
+		ASSERT(false);
+	}
+}

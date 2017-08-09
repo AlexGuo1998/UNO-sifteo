@@ -26,6 +26,7 @@ typedef struct {
 	struct VideoBuffer vid;
 	struct Scroller scroller;//牌列表滚动区
 	int16_t viewbuffer = -17;
+	uint8_t displaypart = 0;//0=full screen 1=top screen 2=bottom screen
 	char name[13];
 	uint16_t score;
 } Player;
