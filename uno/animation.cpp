@@ -343,10 +343,10 @@ void animPlayCard(UID playuid, CARDID cardid) {
 	System::paint();
 }
 
-void animDrawN(uint8_t n) {
+void animDropDown(uint8_t count, uint8_t *x) {
 	const unsigned ontime = 400;//numbers dropping
 	const unsigned delaytime = 100;//delay between 2 numbers
-	const unsigned sleeptime = 700;//sleep
+	const unsigned sleeptime = 800;//sleep
 	//const unsigned offtime = 400;//numbers raising
 
 	const int endy = 40;
@@ -358,47 +358,11 @@ void animDrawN(uint8_t n) {
 	const float t_d = (ontime - t_1) / 2;
 	const unsigned t_split = t_1 + t_d / 2;
 
-	uint8_t numcount, x[3];
-	if (n < 10) {
-		numcount = 2;
-		x[0] = 50;
-		x[1] = 62;
-	} else {
-		numcount = 3;
-		x[0] = 44;
-		x[1] = 56;
-		x[2] = 68;
-	}
-	
-	//System::finish();
-	
-	//init mode
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			//part window
-			changeWindow(i, 1);
-
-			//paint card(?) TODO
-			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-			
-			player[i].vid.sprites[0].move(x[0], -16);
-			player[i].vid.sprites[1].move(x[1], -16);
-			player[i].vid.sprites[0].setImage(NumbersPic, 10);// '+'
-			if (numcount == 2) {
-				player[i].vid.sprites[1].setImage(NumbersPic, n);
-			} else {
-				player[i].vid.sprites[2].move(x[2], -16);
-				player[i].vid.sprites[1].setImage(NumbersPic, n / 10);
-				player[i].vid.sprites[2].setImage(NumbersPic, n % 10);
-			}
-		}
-	}
-
 	g_frameclock.next();
 
 	//on
 	int frames = 0;
-	while (frames < (ontime - delaytime) + numcount * delaytime) {
+	while (frames < (ontime - delaytime) + count * delaytime) {
 		int8_t y[3];
 		//calc y
 		for (uint8_t j = 0; j < 3; j++) {
@@ -413,11 +377,10 @@ void animDrawN(uint8_t n) {
 				y[j] = a * ((ontime - frames_j) * (ontime - frames_j)) + endy;
 			}
 		}
-		//LOG("f=%d\t%d\t%d\t%d\n", frames, y[0], y[1], y[2]);
 
 		for (UID i = 0; i < 12; i++) {
 			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				for (uint8_t j = 0; j < numcount; j++) {
+				for (uint8_t j = 0; j < count; j++) {
 					player[i].vid.sprites[j].move(x[j], y[j]);
 				}
 			}
@@ -431,7 +394,7 @@ void animDrawN(uint8_t n) {
 	//on - fin
 	for (UID i = 0; i < 12; i++) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			for (uint8_t j = 0; j < numcount; j++) {
+			for (uint8_t j = 0; j < count; j++) {
 				player[i].vid.sprites[j].move(x[j], endy);
 			}
 		}
@@ -439,23 +402,23 @@ void animDrawN(uint8_t n) {
 
 
 	//sleep
-	frames -= (ontime - delaytime) + numcount * delaytime;
+	frames -= (ontime - delaytime) + count * delaytime;
 	while (frames < sleeptime) {
 		System::paint();
 		g_frameclock.next();
 		frames += g_frameclock.delta().milliseconds();
 	}
 
-#if 0
 
 	//off
+#if 0
 	frames -= sleeptime;
 	while (frames < offtime) {
 		//todo
 		uint8_t y = -16;
 		for (UID i = 0; i < 12; i++) {
 			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				for (uint8_t j = 0; j < numcount; j++) {
+				for (uint8_t j = 0; j < count; j++) {
 					player[i].vid.sprites[j].move(x[j], y);
 				}
 			}
@@ -464,17 +427,52 @@ void animDrawN(uint8_t n) {
 		g_frameclock.next();
 		frames += g_frameclock.delta().milliseconds();
 	}
-
 #endif // 0
 
 	//clean all
 	for (UID i = 0; i < 12; i++) {
 		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			for (uint8_t j = 0; j < 3; j++) {
+			for (uint8_t j = 0; j < count; j++) {
 				player[i].vid.sprites[j].hide();
 			}
-			//player[i].viewbuffer = -17;//TODO is it needed?
 		}
 	}
-	System::paint();
+}
+
+void animDrawN(uint8_t n) {
+	uint8_t count, x[3];
+	if (n < 10) {
+		count = 2;
+		x[0] = 50;
+		x[1] = 62;
+	} else {
+		count = 3;
+		x[0] = 44;
+		x[1] = 56;
+		x[2] = 68;
+	}
+	
+	//init mode
+	for (UID i = 0; i < 12; i++) {
+		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
+			//part window
+			changeWindow(i, 1);
+
+			//paint card(?) TODO
+			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+			
+			player[i].vid.sprites[0].move(x[0], -16);
+			player[i].vid.sprites[1].move(x[1], -16);
+			player[i].vid.sprites[0].setImage(NumbersPic, 10);// '+'
+			if (count == 2) {
+				player[i].vid.sprites[1].setImage(NumbersPic, n);
+			} else {
+				player[i].vid.sprites[2].move(x[2], -16);
+				player[i].vid.sprites[1].setImage(NumbersPic, n / 10);
+				player[i].vid.sprites[2].setImage(NumbersPic, n % 10);
+			}
+		}
+	}
+
+	animDropDown(count, x);
 }

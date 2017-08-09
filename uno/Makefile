@@ -17,7 +17,7 @@ OBJS = \
 ASSETDEPS += *.png $(ASSETS).lua
 CDEPS += *.h
 
-CFLAGS += -D CUBE_ALLOCATION=12 -D MENU_LOGS_ENABLED
+CFLAGS += -D CUBE_ALLOCATION=12 # -D MENU_LOGS_ENABLED
 
 # build assets.html to proof stir-processed assets.
 # comment out to disable.

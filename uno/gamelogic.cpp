@@ -225,7 +225,7 @@ void PlaySingleGame(void) {
 					//popup
 					for (uint8_t i = 0; i < 12; i++) {
 						if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-							changeWindow(nowplayer, 1);
+							changeWindow(i, 1);
 							player[i].vid.bg0.image(vec(13, 3), BubblePic, 0);
 							player[i].vid.bg0.image(vec(14, 4), WildColorPic, lastcolor);
 						}
@@ -302,6 +302,7 @@ void PlaySingleGame(void) {
 							}
 						}
 					} while (played);
+					animSkip();
 					break;
 				}
 				case 1://+2
@@ -359,9 +360,9 @@ void PlaySingleGame(void) {
 					break;
 				}
 				case 2://reverse
-					if (!finished) {//TODO or player = 2
+					if (!finished && playerCount > 2) {
 						reverse = !reverse;
-						//todo animation
+						animReverse();
 					}
 					break;
 				}
@@ -374,8 +375,6 @@ void PlaySingleGame(void) {
 		}
 		System::finish();
 		nowplayer = getNextPlayer(reverse, nowplayer);
-		animUpdateScroll(playerOn);
-		System::paint();
 
 		//wait for play, check valibility
 		{

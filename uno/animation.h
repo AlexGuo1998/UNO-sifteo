@@ -79,8 +79,6 @@ inline void paintDefBg(UID id) {
 	}
 }
 
-void animDrawN(uint8_t n);
-
 //change a player's window
 //mode:0=force fullscreen 1=upper/full 2=force bottom
 inline void changeWindow(UID uid, uint8_t mode) {
@@ -92,7 +90,7 @@ inline void changeWindow(UID uid, uint8_t mode) {
 			ASSERT(player[uid].viewbuffer = -17);
 			player[uid].vid.setDefaultWindow();
 			player[uid].displaypart = 0;
-			player[uid].vid.bg0.setPanning(vec(0, 0));// ?
+			player[uid].vid.bg0.setPanning(vec(0, 0));
 		}
 		break;
 	case 1:
@@ -113,4 +111,48 @@ inline void changeWindow(UID uid, uint8_t mode) {
 	default:
 		ASSERT(false);
 	}
+}
+
+void animDropDown(uint8_t count, uint8_t *x);
+
+void animDrawN(uint8_t n);
+
+inline void animSkip(void) {
+	uint8_t x = 48;
+
+	//init mode
+	for (UID i = 0; i < 12; i++) {
+		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
+			//part window
+			changeWindow(i, 1);
+
+			//paint card(?) TODO
+			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+
+			player[i].vid.sprites[0].move(x, -16);
+			player[i].vid.sprites[0].setImage(SkipPopupPic);
+		}
+	}
+
+	animDropDown(1, &x);
+}
+
+inline void animReverse(void) {
+	uint8_t x = 48;
+
+	//init mode
+	for (UID i = 0; i < 12; i++) {
+		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
+			//part window
+			changeWindow(i, 1);
+
+			//paint card(?) TODO
+			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+
+			player[i].vid.sprites[0].move(x, -16);
+			player[i].vid.sprites[0].setImage(ReversePopupPic);
+		}
+	}
+
+	animDropDown(1, &x);
 }

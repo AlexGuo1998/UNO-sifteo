@@ -86,3 +86,7 @@ ArrowNowPlayerPic = image{frames("images/mini/mini%04d.png", 11, 12), quality=8.
 
 -- Numbers for +2, +4
 NumbersPic = image{"images/numbers.png", quality=10, pinned=true, width=16}
+
+ReversePopupPic = image{"images/reverse_popup.png", quality=10, pinned=true}
+
+SkipPopupPic = image{"images/skip_popup.png", quality=10, pinned=true}
