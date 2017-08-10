@@ -306,6 +306,7 @@ void animPlayCard(UID playuid, CARDID cardid) {
 			}
 		}
 	}
+	animShowCardCount(playuid);
 	
 	g_frameclock.next();
 	int frames = 0;
@@ -341,7 +342,6 @@ void animPlayCard(UID playuid, CARDID cardid) {
 			player[i].vid.bg0.image(vec(9, 3), CardPic, cardid);
 		}
 	}
-	animShowCardCount(playuid);
 	System::paint();
 }
 
@@ -506,6 +506,6 @@ void animShowCardCount(UID uid) {
 			player[uid].vid.bg0.image(getUserReaminingPos(index), CardsRemainingPic, cardcount);
 			index++;
 		}
-		pos = (pos + 1) % 12;
+		pos = (pos + 11) % 12;
 	}
 }
