@@ -166,7 +166,6 @@ void PlaySingleGame(void) {
 			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
 			paintDefBg(i);
 			player[i].vid.bg0.image(vec(3, 3), CardPic, 54);
-
 		}
 	}
 	g_frameclock.next();
@@ -177,14 +176,18 @@ void PlaySingleGame(void) {
 	UID nowplayer = startTurn;
 	bool reverse = false;
 
+	animShowNowPlayer(-1, reverse); //reset lastuid
+
 	//draw 7
 	ASSERT(playerOn & (PLAYERMASK)(0x80000000 >> nowplayer));
 	for (uint8_t i = 0; i < INIT_CARD_COUNT; i++) {
 		do {
+			animShowNowPlayer(nowplayer, reverse);
 			animDrawCard(nowplayer, drawOne(nowplayer), true);
 			nowplayer = getNextPlayer(reverse, nowplayer);
 		} while (nowplayer != startTurn);
 	}
+	animShowNowPlayer(nowplayer, reverse);
 
 	//discard 1
 	do {
@@ -231,6 +234,7 @@ void PlaySingleGame(void) {
 
 				if (CARD_ISWILDDRAW4(lastcard)) {
 					UID nextplayer = getNextPlayer(reverse, nowplayer);
+					animShowNowPlayer(nextplayer, reverse);
 					bool queried = false;
 					if (!finished) {
 						//todo query
@@ -245,10 +249,12 @@ void PlaySingleGame(void) {
 							}
 						} else {
 							//this player draw4
+							animShowNowPlayer(nowplayer, reverse);
 							animDrawN(4);
 							for (uint8_t i = 0; i < 4; i++) {
 								animDrawCard(nowplayer, drawOne(nowplayer), true);
 							}
+							animShowNowPlayer(nextplayer, reverse);
 						}
 					} else {
 						//next player draw4
@@ -267,7 +273,7 @@ void PlaySingleGame(void) {
 					do {
 						played = false;
 						nowplayer = getNextPlayer(reverse, nowplayer);
-						
+						animShowNowPlayer(nowplayer, reverse);
 						//true if user have skip
 						bool canplay;
 						//go through the card to find
@@ -285,7 +291,7 @@ void PlaySingleGame(void) {
 						if (canplay) {
 							//query nowplayer
 							CARDCOUNT playcardpos;
-							System::finish();
+							System::paint(); System::finish();
 							shake.attach(nowplayer);
 							bool ret = waitForCard(nowplayer, CARD_ISSKIP_FUN, &lastcard, &playcardpos);
 							player[nowplayer].cid.detachMotionBuffer();
@@ -309,6 +315,7 @@ void PlaySingleGame(void) {
 					do {
 						played = false;
 						nowplayer = getNextPlayer(reverse, nowplayer);
+						animShowNowPlayer(nowplayer, reverse);
 						addcount += 2;
 
 						//true if user have skip
@@ -328,7 +335,7 @@ void PlaySingleGame(void) {
 						if (canplay) {
 							//query nowplayer
 							CARDCOUNT playcardpos;
-							System::finish();
+							System::paint(); System::finish();
 							shake.attach(nowplayer);
 							bool ret = waitForCard(nowplayer, CARD_ISDRAW2_FUN, &lastcard, &playcardpos);
 							player[nowplayer].cid.detachMotionBuffer();
@@ -369,9 +376,10 @@ void PlaySingleGame(void) {
 				break;
 			}
 		}
-		System::finish();
-		animUpdateScroll(playerOn); //set popupPlayer = -1, make sure arrows show next
 		nowplayer = getNextPlayer(reverse, nowplayer);
+		animShowNowPlayer(nowplayer, reverse);
+		System::paint(); System::finish();
+		animUpdateScroll(playerOn); //set popupPlayer = -1, make sure arrows show next
 
 		//wait for play, check valibility
 		{

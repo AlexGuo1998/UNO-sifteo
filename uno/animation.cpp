@@ -484,7 +484,7 @@ static inline UInt2 getUserReaminingPos(uint8_t index) {
 	if (index == 0) {
 		return vec<unsigned>(0, 8);
 	} else {
-		return vec<unsigned>(index - 1, 0);
+		return vec<unsigned>(playerCount - index - 1, 0);
 	}
 }
 
@@ -497,7 +497,6 @@ void animShowCardCount(UID uid) {
 	uint8_t cardcount = player[uid].scroller.maxcount;
 	if (cardcount > 10) cardcount = 10;
 
-	LOG("Showcount:UID=%d,Count=%d\n", uid, cardcount);
 	for (uint8_t i = 0; i < 12; i++) {
 		uid = playermap[pos];
 		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
@@ -508,4 +507,46 @@ void animShowCardCount(UID uid) {
 		}
 		pos = (pos + 11) % 12;
 	}
+}
+
+//TODO rewrite!!
+void animShowNowPlayer(UID uid, bool reverse) {
+	static UID lastuid = -1;
+	LOG("UID=%d,LastUID=%d\n", uid, lastuid);
+	if (uid == -1) {
+		//reset lastuid, do nothing
+		lastuid = -1;
+		return;
+	}
+	ASSERT(playerOn != 0);
+	
+	uint8_t pos, index;
+	if (lastuid >= 0) {
+		pos = 0; //position of nowplayer
+		index = 0;
+		while (playermap[pos] != lastuid) pos++;
+		for (uint8_t i = 0; i < 12; i++) {
+			lastuid = playermap[pos];
+			if (playerOn & (PLAYERMASK)(0x80000000 >> lastuid)) {
+				changeWindow(lastuid, 1);
+				player[lastuid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), BackGroundPic, g_random.randrange(8));
+				index++;
+			}
+			pos = (pos + 11) % 12;
+		}
+	}
+	lastuid = uid;
+	pos = 0; //position of nowplayer
+	index = 0;
+	while (playermap[pos] != lastuid) pos++;
+
+	for (uint8_t i = 0; i < 12; i++) {
+		uid = playermap[pos];
+		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
+			ASSERT(player[uid].displaypart < 2);
+			player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (unsigned)reverse);
+			index++;
+		}
+		pos = (pos + 11) % 12;
+	}	
 }

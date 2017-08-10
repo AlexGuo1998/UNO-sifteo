@@ -158,3 +158,5 @@ inline void animReverse(void) {
 }
 
 void animShowCardCount(UID uid);
+
+void animShowNowPlayer(UID uid, bool reverse);
