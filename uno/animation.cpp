@@ -544,7 +544,7 @@ void animShowNowPlayer(UID uid, bool reverse) {
 		uid = playermap[pos];
 		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
 			ASSERT(player[uid].displaypart < 2);
-			player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (unsigned)reverse);
+			player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (index ? (unsigned)reverse : (unsigned)!reverse));
 			index++;
 		}
 		pos = (pos + 11) % 12;
