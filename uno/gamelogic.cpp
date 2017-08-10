@@ -33,9 +33,7 @@ void InputName(void) {
 inline UID getNextPlayer(bool reverse, UID player) {
 	ASSERT(playerOn != 0);
 	uint8_t pos = 0;//user position
-	while (playermap[pos] != player) {
-		pos++;
-	}
+	while (playermap[pos] != player) pos++;
 
 	do {
 		pos = (pos + (reverse ? 11 : 1)) % 12;
@@ -149,10 +147,9 @@ inline uint8_t selectColor(UID nowplayer) {
 
 //TODO inline?
 inline void playCard(UID user, CARDCOUNT pos) {
+	player[user].scroller.init(player[user].scroller.maxcount - 1);
 	animPlayCard(user, lastcard);
 	setOneCard(-1, pos);
-	player[user].scroller.init(player[user].scroller.maxcount - 1);
-	//TODO update status show
 }
 
 void PlaySingleGame(void) {
@@ -193,7 +190,6 @@ void PlaySingleGame(void) {
 	do {
 		lastcard = drawOne(-1);
 		animDiscardCard(playerOn, lastcard);
-		//LOG_INT(lastcard);
 	} while (CARD_ISWILDDRAW4(lastcard));
 	System::paint();
 	bool played = true;
@@ -235,7 +231,7 @@ void PlaySingleGame(void) {
 
 				if (CARD_ISWILDDRAW4(lastcard)) {
 					UID nextplayer = getNextPlayer(reverse, nowplayer);
-					bool queried;
+					bool queried = false;
 					if (!finished) {
 						//todo query
 						queried = false;
@@ -374,6 +370,7 @@ void PlaySingleGame(void) {
 			}
 		}
 		System::finish();
+		animUpdateScroll(playerOn); //set popupPlayer = -1, make sure arrows show next
 		nowplayer = getNextPlayer(reverse, nowplayer);
 
 		//wait for play, check valibility

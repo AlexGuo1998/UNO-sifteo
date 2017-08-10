@@ -273,6 +273,7 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 			}
 		}
 	}
+	animShowCardCount(drawuid);
 	System::paint();
 }
 
@@ -340,6 +341,7 @@ void animPlayCard(UID playuid, CARDID cardid) {
 			player[i].vid.bg0.image(vec(9, 3), CardPic, cardid);
 		}
 	}
+	animShowCardCount(playuid);
 	System::paint();
 }
 
@@ -475,4 +477,35 @@ void animDrawN(uint8_t n) {
 	}
 
 	animDropDown(count, x);
+}
+
+static inline UInt2 getUserReaminingPos(uint8_t index) {
+	//TODO 
+	if (index == 0) {
+		return vec<unsigned>(0, 8);
+	} else {
+		return vec<unsigned>(index - 1, 0);
+	}
+}
+
+//uid = uid of card changed player
+void animShowCardCount(UID uid) {
+	ASSERT(playerOn != 0);
+	uint8_t pos = 0; //position of changed user
+	while (playermap[pos] != uid) pos++;
+	uint8_t index = 0;
+	uint8_t cardcount = player[uid].scroller.maxcount;
+	if (cardcount > 10) cardcount = 10;
+
+	LOG("Showcount:UID=%d,Count=%d\n", uid, cardcount);
+	for (uint8_t i = 0; i < 12; i++) {
+		uid = playermap[pos];
+		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
+			//changeWindow(uid, 1);
+			ASSERT(player[uid].displaypart < 2);
+			player[uid].vid.bg0.image(getUserReaminingPos(index), CardsRemainingPic, cardcount);
+			index++;
+		}
+		pos = (pos + 1) % 12;
+	}
 }

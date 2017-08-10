@@ -79,7 +79,7 @@ WildColorPic = image{frames("images/mini/mini%04d.png", 13, 16), quality=10}
 ArrowDownPic = image{"images/down.png", quality=10, pinned=true}
 
 -- How many cards are remaining
-CardsRemainingPic = image{frames("images/mini/mini%04d.png", 1, 10), quality=8.5}
+CardsRemainingPic = image{frames("images/mini/mini%04d.png", 0, 10), quality=8.5}
 
 -- Now Player, next turn L/R
 ArrowNowPlayerPic = image{frames("images/mini/mini%04d.png", 11, 12), quality=8.5}

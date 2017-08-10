@@ -7,7 +7,7 @@
 
 //void printPan(VideoBuffer &vid, UID uid, int16_t panx, int16_t &buffered, bool zeropan = false);
 
-void animUpdateScroll(PLAYERMASK mask, UID zeroPanPlayer = -1);
+void animUpdateScroll(PLAYERMASK mask, UID popupPlayer = -1);
 
 //TODO merge the 3 functions following
 
@@ -156,3 +156,5 @@ inline void animReverse(void) {
 
 	animDropDown(1, &x);
 }
+
+void animShowCardCount(UID uid);
