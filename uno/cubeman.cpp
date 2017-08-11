@@ -7,14 +7,14 @@
 #include "cubeman.h"
 
 #include "animation.h"
-
+#include "typer.h"
 
 bool bs2installed = false;
 PLAYERMASK assetsLoadUID = 0;
 
 
 void eventCubeConnect(void *pv, unsigned id) {
-	player[id].vid.initMode(BG0_SPR_BG1); 
+	//player[id].vid.initMode(BG0_SPR_BG1);
 	player[id].vid.attach(id);
 
 	LOG("Cube connect: #%d\n", id);
@@ -29,7 +29,9 @@ void eventCubeConnect(void *pv, unsigned id) {
 			//user is binded
 			//TODO change uid
 		} else {
-			//user is not binded
+			//user is not binded (typing name)
+			playerCount++;
+			playerOn |= (PLAYERMASK)(0x80000000 >> id);
 		}
 	} else {
 		playerCount++;
@@ -45,6 +47,10 @@ void eventCubeLost(void *pv, unsigned id) {
 			//TODO change uid
 		} else {
 			//user is not binded
+			playerCount--;
+			playerOn &= ~(PLAYERMASK)(0x80000000 >> id);
+			ASSERT(typer);
+			typerClear(id);
 		}
 	} else {
 		playerCount--;

@@ -12,6 +12,7 @@
 #include "animation.h"
 #include "cubeman.h"
 #include "savedata.h"
+#include "typer.h"
 
 static Metadata M = Metadata()
 	.title("UNO!")
@@ -31,15 +32,15 @@ void main() {
 	Events::cubeConnect.set(eventCubeConnect);
 	Events::cubeDisconnect.set(eventCubeLost);
 	Events::cubeAssetDone.set(eventLoadFinish);
-	
+
+	Bootstrap();
+
 	//set master cube
 	{
 		unsigned i;
 		CubeSet::connected().findFirst(i);
 		g_mastercube = i;
 	}
-
-	Bootstrap();
 
 	g_loaderconfig.append(MainSlot, GameGroup);
 	
@@ -49,6 +50,7 @@ void main() {
 	GameMenuSettings();
 	saveSettings();
 	g_gamestate &= ~8;
+	typeName();
 	{
 		bool loading = startLoad(CubeSet::connected().mask());
 		if (loading && !isLoadFinish()) {

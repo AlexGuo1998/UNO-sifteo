@@ -12,6 +12,7 @@ OBJS = \
 	cubeman.o \
 	menulogic.o \
 	savedata.o \
+	typer.o \
 	main.o
 
 ASSETDEPS += *.png $(ASSETS).lua

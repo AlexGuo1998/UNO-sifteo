@@ -161,7 +161,7 @@ uint8_t GameMenuSettings() {
 				continue;
 			} else {
 				if (cubefit) {
-					System::setCubeRange(playercount_disp + 2);
+					System::setCubeRange(0, playercount_disp + 2);
 				} else {
 					continue;
 				}
@@ -214,7 +214,8 @@ uint8_t GameMenuSettings() {
 	//System::setCubeRange(playercount_disp + 2);
 
 	//loop until all cubes are connected/disconnected
-	while (playerCount != playercount_disp + 2) {
+	playerCount_set = playercount_disp + 2;
+	while (playerCount > playerCount_set) {
 		System::paint();
 	}
 	g_gamestate |= 2;

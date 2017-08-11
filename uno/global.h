@@ -20,6 +20,7 @@ extern UID g_mastercube; //显示菜单的方块
 extern PLAYERMASK playerOn; //在场玩家的UID bitmap
 extern Player player[12]; //所有玩家，每一个UID对应特定cube
 extern UID playerCount;
+extern UID playerCount_set; // set by code
 extern UID playermap[12]; //以出牌顺序排列的UID列表
 
 //TODO load from so
