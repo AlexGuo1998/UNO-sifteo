@@ -54,6 +54,10 @@ void main() {
 		bool loading = startLoad(CubeSet::connected().mask());
 		if (loading && !isLoadFinish()) {
 			paintDefBg(g_mastercube);
+			player[g_mastercube].vid.bg0.image(vec(3, 5), GameLabelPic, 0);
+			player[g_mastercube].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(8, 1)));
+			player[g_mastercube].vid.bg1.setPanning(vec(-32, -96));
+			player[g_mastercube].vid.bg1.image(vec(0, 0), AlexSoftLabel, 0);
 			while (loadingCycle(true)) {
 				System::paint();
 			}
