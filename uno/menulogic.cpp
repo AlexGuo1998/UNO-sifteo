@@ -219,9 +219,6 @@ uint8_t GameMenuSettings() {
 	}
 	g_gamestate |= 2;
 	
-	LOG_INT(playerCount); LOG_INT(CubeSet::connected().count()); LOG_INT(playercount_disp + 2);
-
-	//TODO save settings
 	return 0;
 }
 

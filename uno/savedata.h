@@ -1,4 +1,6 @@
 ﻿#pragma once
 
-#include <sifteo/filesystem.h>
+bool saveGamestate(void);
 
+bool saveSettings(void);
+bool loadSettings(void);

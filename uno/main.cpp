@@ -7,14 +7,11 @@
 #include <sifteo.h>
 #include "assets.gen.h"
 //#include "typer.h"
-#include "typedef.h"
 #include "gamelogic.h"
-
 #include "menulogic.h"
-
 #include "animation.h"
-
 #include "cubeman.h"
+#include "savedata.h"
 
 static Metadata M = Metadata()
 	.title("UNO!")
@@ -29,6 +26,7 @@ static Metadata M = Metadata()
 void main() {
 	g_random = Random();
 	g_loader.init();
+	loadSettings();
 
 	Events::cubeConnect.set(eventCubeConnect);
 	Events::cubeDisconnect.set(eventCubeLost);
@@ -49,6 +47,7 @@ void main() {
 
 	GameMenuNewgame(false);//todo
 	GameMenuSettings();
+	saveSettings();
 	g_gamestate &= ~8;
 	{
 		bool loading = startLoad(CubeSet::connected().mask());
