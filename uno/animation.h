@@ -105,7 +105,6 @@ inline void changeWindow(UID uid, uint8_t mode) {
 		if (player[uid].displaypart != 2) {
 			player[uid].vid.setWindow(80, 48);
 			player[uid].displaypart = 2;
-			player[uid].vid.bg0.setPanning(vec(0, 0));//TODO ?
 		}
 		break;
 	default:

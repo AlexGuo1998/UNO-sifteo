@@ -5,7 +5,7 @@
 #include "global.h"
 
 #include "typedef.h"
-//#include <sifteo/macros.h>
+
 #include "gamelogic.h"
 #include "stack.h"
 #include "animation.h"
@@ -19,12 +19,6 @@ static CARDID lastcard;
 static uint8_t lastcolor;
 static class TiltShakeRecognizer shake;
 
-
-void GameMenu(void) {
-	//TODO
-
-	//playerOn = 0x3;
-}
 
 void InputName(void) {
 }
@@ -152,12 +146,55 @@ inline void playCard(UID user, CARDCOUNT pos) {
 	setOneCard(-1, pos);
 }
 
+static void eventRepaintScreen(void *p, unsigned id) {
+	player[id].vid.touch();
+	if (player[id].displaypart == 1) {
+		Int2 bg1pan = player[id].vid.bg1.getPanning();
+		Int2 spr0pan = player[id].vid.sprites[0].position();
+		Int2 spr1pan = player[id].vid.sprites[1].position();
+		Int2 spr2pan = player[id].vid.sprites[2].position();
+		System::finish();
+		changeWindow(id, 2);
+		player[id].vid.bg0.setPanning(vec((int)player[id].scroller.position % (18 * 8), 80));
+		player[id].vid.bg1.setPanning(vec(0, -48));
+		player[id].vid.sprites[0].move(0, 48);
+		player[id].vid.sprites[1].move(0, 48);
+		player[id].vid.sprites[2].move(0, 48);
+		System::paint(); System::finish();
+		changeWindow(id, 1);
+		player[id].vid.bg1.setPanning(bg1pan);
+		player[id].vid.sprites[0].move(spr0pan);
+		player[id].vid.sprites[1].move(spr1pan);
+		player[id].vid.sprites[2].move(spr2pan);
+	} else if (player[id].displaypart == 2) {
+		Int2 bg0pan = player[id].vid.bg0.getPanning();
+		Int2 bg1pan = player[id].vid.bg1.getPanning();
+		Int2 spr0pan = player[id].vid.sprites[0].position();
+		Int2 spr1pan = player[id].vid.sprites[1].position();
+		System::finish();
+		changeWindow(id, 1);
+		//if y=-64, it's in selectColor() - viewing. don't move bg1.
+		if (bg1pan.y != -64) {
+			player[id].vid.bg1.setPanning(vec(0, -88));
+		}
+		player[id].vid.sprites[0].move(0, 88);
+		player[id].vid.sprites[1].move(0, 88);
+		System::paint(); System::finish();
+		changeWindow(id, 2);
+		player[id].vid.bg0.setPanning(bg0pan);
+		player[id].vid.bg1.setPanning(bg1pan);
+		player[id].vid.sprites[0].move(spr0pan);
+		player[id].vid.sprites[1].move(spr1pan);
+	}
+}
+
 void PlaySingleGame(void) {
 	//TODO
 	const UID startTurn = 0;
 	
 	//new
 	LOG_INT(playerOn);
+	Events::cubeRefresh.set(eventRepaintScreen);
 
 	//init graphic
 	for (uint8_t i = 0; i < 12; i++) {
@@ -478,8 +515,8 @@ void PlaySingleGame(void) {
 				}
 			}
 		}
-		
 	}
+	Events::cubeRefresh.unset();
 }
 
 void EndSingle(void) {

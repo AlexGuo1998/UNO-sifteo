@@ -54,6 +54,7 @@ void eventCubeLost(void *pv, unsigned id) {
 
 void eventLoadFinish(void *pv, unsigned id) {
 	LOG("Load finish: #%d\n", id);
+	player[id].vid.touch();
 	if (g_gamestate & 8 && id != g_mastercube) {
 		LOG("Paint\n");
 		player[id].vid.bg0.image(vec(3, 5), GameLabelPic, 0);
