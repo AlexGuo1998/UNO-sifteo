@@ -90,3 +90,5 @@ NumbersPic = image{"images/numbers.png", quality=10, pinned=true, width=16}
 ReversePopupPic = image{"images/reverse_popup.png", quality=10, pinned=true}
 
 SkipPopupPic = image{"images/skip_popup.png", quality=10, pinned=true}
+
+UNOPopupPic = image{"images/uno_popup.png", quality=9.9, pinned=true}

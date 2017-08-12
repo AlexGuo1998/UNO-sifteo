@@ -4,27 +4,16 @@
 
 #include "global.h"
 
-#include "typedef.h"
-
 #include "gamelogic.h"
 #include "stack.h"
 #include "animation.h"
-//#include "states.h"
-//#include "cubeman.h"
-
-
-
 
 static CARDID lastcard;
 static uint8_t lastcolor;
 static class TiltShakeRecognizer shake;
 
-
-void InputName(void) {
-}
-
 //TODO no inline?
-inline UID getNextPlayer(bool reverse, UID player) {
+static inline UID getNextPlayer(bool reverse, UID player) {
 	ASSERT(playerOn != 0);
 	uint8_t pos = 0;//user position
 	while (playermap[pos] != player) pos++;
@@ -36,7 +25,7 @@ inline UID getNextPlayer(bool reverse, UID player) {
 	return player;
 }
 
-inline bool isCardValid(CARDID thiscard) {
+static inline bool isCardValid(CARDID thiscard) {
 	uint8_t lastcolor_get = CARD_GETCOLOR(lastcard);//计算的color
 	if (lastcolor_get < 4) {//normal
 		ASSERT(lastcolor_get == lastcolor);
@@ -53,7 +42,7 @@ inline bool isCardValid(CARDID thiscard) {
 //wait for a user to play a card
 //return true if the card is played and valid, false if she user shaked.
 //TODO inline?
-/*inline */bool waitForCard(UID nowplayer, bool (*verify)(CARDID thiscard), CARDID *thiscard, CARDCOUNT *playcardpos, bool lock = false) {
+static /*inline */bool waitForCard(UID nowplayer, bool (*verify)(CARDID thiscard), CARDID *thiscard, CARDCOUNT *playcardpos, bool lock = false) {
 	bool played = true;
 
 	player[nowplayer].scroller.status = 1;//force update popup
@@ -87,7 +76,7 @@ inline bool isCardValid(CARDID thiscard) {
 	return played;
 }
 
-inline uint8_t selectColor(UID nowplayer) {
+static inline uint8_t selectColor(UID nowplayer) {
 	uint8_t color = 0;
 	
 	//init scroller
@@ -140,7 +129,7 @@ inline uint8_t selectColor(UID nowplayer) {
 }
 
 //TODO inline?
-inline void playCard(UID user, CARDCOUNT pos) {
+static inline void playCard(UID user, CARDCOUNT pos) {
 	player[user].scroller.init(player[user].scroller.maxcount - 1);
 	animPlayCard(user, lastcard);
 	setOneCard(-1, pos);
@@ -510,8 +499,8 @@ void PlaySingleGame(void) {
 					finished = true;
 					break;
 				case 1:
-					;
-					//TODO say UNO!
+					//say UNO!
+					animUNO();
 				}
 			}
 		}

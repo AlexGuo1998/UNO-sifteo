@@ -156,6 +156,26 @@ inline void animReverse(void) {
 	animDropDown(1, &x);
 }
 
+inline void animUNO(void) {
+	uint8_t x = 48;
+
+	//init mode
+	for (UID i = 0; i < 12; i++) {
+		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
+			//part window
+			changeWindow(i, 1);
+
+			//paint card(?) TODO
+			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+
+			player[i].vid.sprites[0].move(x, -16);
+			player[i].vid.sprites[0].setImage(UNOPopupPic);
+		}
+	}
+
+	animDropDown(1, &x);
+}
+
 void animShowCardCount(UID uid);
 
 void animShowNowPlayer(UID uid, bool reverse);

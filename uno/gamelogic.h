@@ -7,9 +7,6 @@
 
 #define INIT_CARD_COUNT 7
 
-//每个玩家输入名字
-void InputName(void);
-
 //玩家形成一个环
 void PairLoop(void);
 
