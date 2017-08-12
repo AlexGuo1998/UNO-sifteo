@@ -32,7 +32,7 @@ static const char keymask[2][4][13] = {
 static const char OKCancelLbl[2][7] = {"  OK  ", "Cancel"};
 static const char blank[] = "             ";
 
-static const BG0ROMDrawable::Palette oncolor = BG0ROMDrawable::YELLOW_ON_BLUE, offcolor = BG0ROMDrawable::BLACK_ON_WHITE;
+static const BG0ROMDrawable::Palette oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE, offcolor = BG0ROMDrawable::WHITE_ON_GREEN;
 
 static inline void changeShift(UID id) {
 	typer[id].shift ^= 1;
@@ -164,6 +164,7 @@ void typeName(void) {
 	//init
 	for (uint8_t i = 0; i < 12; i++) {
 		player[i].vid.initMode(BG0_ROM);
+		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', offcolor));
 		player[i].vid.bg0rom.text(vec(2, 1), "Please input", offcolor);
 		player[i].vid.bg0rom.text(vec(3, 2), "your name:", offcolor);
 		typerRepaint(i);
