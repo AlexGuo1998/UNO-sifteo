@@ -77,13 +77,12 @@ static /*inline */bool waitForCard(UID nowplayer, bool (*verify)(CARDID thiscard
 }
 
 static inline uint8_t selectColor(UID nowplayer) {
-	uint8_t color = 0;
-	
 	//init scroller
 	Scroller scroller;
 	scroller.init(4);
 
 	//init graphic
+	ASSERT(player[nowplayer].displaypart < 2);
 	player[nowplayer].vid.bg1.setPanning(vec(-64, -64));
 	player[nowplayer].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(8, 2)));
 	player[nowplayer].vid.sprites[0].setImage(ArrowDownPic, 0);
@@ -126,6 +125,36 @@ static inline uint8_t selectColor(UID nowplayer) {
 	player[nowplayer].vid.bg1.image(vec(0, 0), BlankCard, 0);
 	player[nowplayer].vid.sprites[0].hide();
 	return scroller.stop_count;
+}
+
+static inline bool challengeQuery(UID nowplayer) {
+	//init scroller
+	Scroller scroller;
+	scroller.init(2);
+
+	//init graphic
+	changeWindow(nowplayer, 1);
+	player[nowplayer].vid.bg1.setPanning(vec(-64, -62));
+	player[nowplayer].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(7, 1)));
+	player[nowplayer].vid.sprites[0].setImage(ArrowDownPic, 0);
+	player[nowplayer].vid.sprites[0].move(56, 60);
+	player[nowplayer].vid.bg1.image(vec(0, 0), ChallengeSelectPic, 0);
+
+	//loop
+	do {
+		scroller.update(player[nowplayer].cid.accel().x);
+		player[nowplayer].vid.bg1.setPanning(vec((int)(scroller.position * ((float)60 / 64) + (.5 - 64)), -76));
+		animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+		System::paint();
+	} while (!(
+		player[nowplayer].cid.isTouching() &&
+		scroller.status == 0
+		));
+
+	player[nowplayer].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(4, 6)));
+	player[nowplayer].vid.bg1.image(vec(0, 0), BlankCard, 0);
+	player[nowplayer].vid.sprites[0].hide();
+	return !scroller.stop_count;
 }
 
 //TODO inline?
@@ -263,8 +292,7 @@ void PlaySingleGame(void) {
 					animShowNowPlayer(nextplayer, reverse);
 					bool queried = false;
 					if (!finished) {
-						//todo query
-						queried = false;
+						queried = challengeQuery(nextplayer);
 					}
 					if (queried) {
 						if (validplay) {
