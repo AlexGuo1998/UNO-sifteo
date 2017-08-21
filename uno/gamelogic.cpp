@@ -12,17 +12,129 @@ static CARDID lastcard;
 static uint8_t lastcolor;
 static class TiltShakeRecognizer shake;
 
-//TODO no inline?
-static inline UID getNextPlayer(bool reverse, UID player) {
-	ASSERT(playerOn != 0);
-	uint8_t pos = 0;//user position
-	while (playermap[pos] != player) pos++;
+//r: unpair this.right
+static void unpair(UID *rightplayer, UID i, bool r) {
+	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
+	UID right;
+	if (r) {
+		right = rightplayer[i];
+		rightplayer[i] = -1;
+	} else {
+		right = i;
+		for (i = 0; i < 12; i++) {
+			if (rightplayer[i] == right) {
+				rightplayer[i] = -1;
+				break;
+			}
+		}
+		if (i == 12) i = -1;
+	}
+	
+	if (i != -1) {
+		player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+	}
+
+	if (right != -1) {
+		player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+	}
+}
+
+void PairLoop(void) {
+	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
+	UID rightplayer[12];
+	memset8((uint8_t *)rightplayer, -1, sizeof(rightplayer));
+	
+	bool running;
+	PLAYERMASK lastmask = CubeSet::connected().mask();
+
+	for (uint8_t i = 0; i < 12; i++) {
+		ASSERT(player[i].vid.mode() == BG0_ROM);
+		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
+		player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", color);
+		player[i].vid.bg0rom.text(vec(2, 2), "pair a loop", color);
+		player[i].vid.bg0rom.text(vec(2, 7), player[i].name, color);
+		player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
+		player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
+		player[i].vid.bg0rom.plot(vec(0, 7), BG0ROMDrawable::charTile('-', color));
+		player[i].vid.bg0rom.plot(vec(15, 7), BG0ROMDrawable::charTile('-', color));
+		player[i].vid.bg0rom.plot(vec(15, 9), BG0ROMDrawable::charTile('>', color));
+	}
 
 	do {
-		pos = (pos + (reverse ? 11 : 1)) % 12;
-		player = playermap[pos];
-	} while (!(playerOn & (PLAYERMASK)(0x80000000 >> player)));
-	return player;
+		//TODO ...
+		System::paint();
+
+		LOG("r:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", rightplayer[0], rightplayer[1], rightplayer[2], rightplayer[3], rightplayer[4], rightplayer[5], rightplayer[6], rightplayer[7], rightplayer[8], rightplayer[9], rightplayer[10], rightplayer[11]);
+
+		unsigned i;
+		CubeSet cubes = CubeSet::connected();
+		if (cubes.mask() != lastmask) {
+			CubeSet lost;
+			lost.setMask(lastmask & ~cubes.mask());
+			while (cubes.clearFirst(i)) {
+				unpair(rightplayer, i, true);
+				unpair(rightplayer, i, false);				
+			}
+			lastmask = cubes.mask();
+		}
+
+		while (cubes.clearFirst(i)) {
+			CubeID right = Neighborhood(i).cubeAt(RIGHT);
+			if (right.isDefined() && Neighborhood(right).cubeAt(LEFT) == i && rightplayer[i] != right) {
+				LOG("Pair:%d,%d", i, (int)right);
+				
+				unpair(rightplayer, i, true);
+				unpair(rightplayer, right, false);
+
+				rightplayer[i] = right;
+
+				player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+				player[i].vid.bg0rom.text(vec(2, 9), player[right].name, color);
+
+				player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+				player[right].vid.bg0rom.text(vec(2, 5), player[i].name, color);
+			}
+		}
+
+		//ASSERT(playerOn == CubeSet::connected().mask());//?
+		running = false;
+		cubes = CubeSet::connected();
+		
+		while (cubes.clearFirst(i)) {
+			if (rightplayer[i] == -1) {
+				running = true;
+				break;
+			}
+		}
+		if (!running) {
+			//check loop
+			PLAYERMASK loopplayer = 0;
+			CubeSet::connected().findFirst(i);
+			UID nowplayer = i;
+
+			do {
+				loopplayer |= (PLAYERMASK)(0x80000000 >> nowplayer);
+				nowplayer = rightplayer[nowplayer];
+			} while ((nowplayer != i) && !(loopplayer & (PLAYERMASK)(0x80000000 >> nowplayer)));
+			running = (loopplayer != CubeSet::connected().mask());
+		}
+
+	} while (running);
+
+	//ending
+
+
+}
+
+
+//TODO no inline?
+static inline UID getNextPlayer(bool reverse, UID player) {
+	if (reverse) {
+		return (player ? player : playerCount) - 1;
+	} else {
+		UID newplayer = player + 1;
+		return (newplayer == playerCount ? 0 : newplayer);
+	}
 }
 
 static inline bool isCardValid(CARDID thiscard) {
@@ -51,13 +163,12 @@ static /*inline */bool waitForCard(UID nowplayer, bool (*verify)(CARDID thiscard
 	}
 
 	do {
-		//if (player[nowplayer].shake.update() & TiltShakeRecognizer::Shake_Begin) {
 		if (shake.update() & TiltShakeRecognizer::Shake_Begin) {
 			played = false;
 			break;
 		}
 
-		animUpdateScroll(playerOn, nowplayer);
+		animUpdateScroll(nowplayer, 0);
 		System::paint();
 	} while (!(
 		player[nowplayer].cid.isTouching() &&		/*touching*/
@@ -99,7 +210,7 @@ static inline uint8_t selectColor(UID nowplayer) {
 			if (viewing) {
 				player[nowplayer].vid.sprites[0].hide();
 				for (uint8_t i = 0; i < 5; i++) {
-					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+					animUpdateScroll(nowplayer, 1);
 					System::paint();
 				}
 				changeWindow(nowplayer, 2);
@@ -109,11 +220,11 @@ static inline uint8_t selectColor(UID nowplayer) {
 			}
 		}
 		if (viewing) {
-			animUpdateScroll(playerOn);
+			animUpdateScroll();
 		} else {
 			scroller.update(player[nowplayer].cid.accel().x);
 			player[nowplayer].vid.bg1.setPanning(vec(-64 + ((int)scroller.position >> 1), -64));
-			animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+			animUpdateScroll(nowplayer, 1);
 		}
 		System::paint();
 	} while (viewing || !(
@@ -144,7 +255,7 @@ static inline bool challengeQuery(UID nowplayer) {
 	do {
 		scroller.update(player[nowplayer].cid.accel().x);
 		player[nowplayer].vid.bg1.setPanning(vec((int)(scroller.position * ((float)60 / 64) + (.5 - 64)), -76));
-		animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+		animUpdateScroll(nowplayer, 1);
 		System::paint();
 	} while (!(
 		player[nowplayer].cid.isTouching() &&
@@ -211,17 +322,14 @@ void PlaySingleGame(void) {
 	const UID startTurn = 0;
 	
 	//new
-	LOG_INT(playerOn);
 	Events::cubeRefresh.set(eventRepaintScreen);
 
 	//init graphic
-	for (uint8_t i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			player[i].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(4, 6)));
-			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-			paintDefBg(i);
-			player[i].vid.bg0.image(vec(3, 3), CardPic, 54);
-		}
+	for (uint8_t i = 0; i < playerCount; i++) {
+		player[i].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(4, 6)));
+		player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+		paintDefBg(i);
+		player[i].vid.bg0.image(vec(3, 3), CardPic, 54);
 	}
 	g_frameclock.next();
 	System::paint();
@@ -234,12 +342,12 @@ void PlaySingleGame(void) {
 	animShowNowPlayer(-1, reverse); //reset lastuid
 
 	//draw 7
-	ASSERT(playerOn & (PLAYERMASK)(0x80000000 >> nowplayer));
+	ASSERT(nowplayer < playerCount);
 	for (uint8_t i = 0; i < INIT_CARD_COUNT; i++) {
 		do {
 			animShowNowPlayer(nowplayer, reverse);
 			animDrawCard(nowplayer, drawOne(nowplayer), true);
-			nowplayer = getNextPlayer(reverse, nowplayer);
+			nowplayer = getNextPlayer(false, nowplayer);
 		} while (nowplayer != startTurn);
 	}
 	animShowNowPlayer(nowplayer, reverse);
@@ -247,7 +355,7 @@ void PlaySingleGame(void) {
 	//discard 1
 	do {
 		lastcard = drawOne(-1);
-		animDiscardCard(playerOn, lastcard);
+		animDiscardCard(lastcard);
 	} while (CARD_ISWILDDRAW4(lastcard));
 	System::paint();
 	bool played = true;
@@ -272,17 +380,15 @@ void PlaySingleGame(void) {
 						} while (ret && validplay);
 					}
 
-					shake.attach(nowplayer);
+					shake.attach(player[nowplayer].cid);
 					lastcolor = selectColor(nowplayer);
 					player[nowplayer].cid.detachMotionBuffer();
 					
 					//popup
-					for (uint8_t i = 0; i < 12; i++) {
-						if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-							changeWindow(i, 1);
-							player[i].vid.bg0.image(vec(13, 3), BubblePic, 0);
-							player[i].vid.bg0.image(vec(14, 4), WildColorPic, lastcolor);
-						}
+					for (uint8_t i = 0; i < playerCount; i++) {
+						changeWindow(i, 1);
+						player[i].vid.bg0.image(vec(13, 3), BubblePic, 0);
+						player[i].vid.bg0.image(vec(14, 4), WildColorPic, lastcolor);
 					}
 					System::paint(); System::finish();
 				}
@@ -346,7 +452,7 @@ void PlaySingleGame(void) {
 							//query nowplayer
 							CARDCOUNT playcardpos;
 							System::paint(); System::finish();
-							shake.attach(nowplayer);
+							shake.attach(player[nowplayer].cid);
 							bool ret = waitForCard(nowplayer, CARD_ISSKIP_FUN, &lastcard, &playcardpos);
 							player[nowplayer].cid.detachMotionBuffer();
 							//player[nowplayer].vid.sprites[0].hide();
@@ -390,7 +496,7 @@ void PlaySingleGame(void) {
 							//query nowplayer
 							CARDCOUNT playcardpos;
 							System::paint(); System::finish();
-							shake.attach(nowplayer);
+							shake.attach(player[nowplayer].cid);
 							bool ret = waitForCard(nowplayer, CARD_ISDRAW2_FUN, &lastcard, &playcardpos);
 							player[nowplayer].cid.detachMotionBuffer();
 							if (ret) {
@@ -433,7 +539,7 @@ void PlaySingleGame(void) {
 		nowplayer = getNextPlayer(reverse, nowplayer);
 		animShowNowPlayer(nowplayer, reverse);
 		System::paint(); System::finish();
-		animUpdateScroll(playerOn); //set popupPlayer = -1, make sure arrows show next
+		animUpdateScroll(); //set popupPlayer = -1, make sure arrows show next
 
 		//wait for play, check valibility
 		{
@@ -444,19 +550,19 @@ void PlaySingleGame(void) {
 			uint8_t delay = 0;
 			
 			System::finish();
-			shake.attach(nowplayer);
+			shake.attach(player[nowplayer].cid);
 			for (;;) {
 				played = waitForCard(nowplayer, isCardValid, &thiscard, &playcardpos);
 				if (played) break;
 
 				//else: getcard
 				player[nowplayer].scroller.status = 1;
-				animUpdateScroll(playerOn, nowplayer);
+				animUpdateScroll(nowplayer, 0);//TODO no popup?
 				player[nowplayer].vid.bg1.image(vec(0, 0), BlankCard, 0);
 
 				//loop to prevent the calling of finish
 				for (uint8_t i = 0; i < 10; i++) {
-					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+					animUpdateScroll(nowplayer, 1);
 					System::paint();
 					if (i == 7) {
 						changeWindow(nowplayer, 1);
@@ -470,10 +576,9 @@ void PlaySingleGame(void) {
 					uint8_t state = (blinkcount & 0x1F) >> 2;
 					if (state > 4) state = 8 - state;
 					player[nowplayer].vid.bg1.setPanning(vec(-24 - state, -24 - state));
-					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+					animUpdateScroll(nowplayer, 1);
 					System::paint();
 				} while (!(
-					//(player[nowplayer].shake.update() & TiltShakeRecognizer::Shake_Begin) || 
 					(shake.update() & TiltShakeRecognizer::Shake_Begin) ||
 					player[nowplayer].cid.isTouching()
 				));
@@ -482,7 +587,7 @@ void PlaySingleGame(void) {
 				player[nowplayer].vid.bg1.image(vec(0, 0), BlankCard, 0);
 				player[nowplayer].vid.bg1.setPanning(vec(-48, -8));
 				for (uint8_t i = 0; i < 10; i++) {
-					animUpdateScroll(playerOn & ~(PLAYERMASK)(0x80000000 >> nowplayer));
+					animUpdateScroll(nowplayer, 1);
 					System::paint();
 				}
 			}
@@ -510,12 +615,10 @@ void PlaySingleGame(void) {
 
 				if (erasewild) {
 					//erase wild popup
-					for (uint8_t i = 0; i < 12; i++) {
-						if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-							for (uint8_t x = 13; x < 16; x++) {
-								for (uint8_t y = 3; y < 8; y++) {
-									player[i].vid.bg0.image(vec(x, y), BackGroundPic, g_random.randrange(8));
-								}
+					for (uint8_t i = 0; i < playerCount; i++) {
+						for (uint8_t x = 13; x < 16; x++) {
+							for (uint8_t y = 3; y < 8; y++) {
+								player[i].vid.bg0.image(vec(x, y), BackGroundPic, g_random.randrange(8));
 							}
 						}
 					}

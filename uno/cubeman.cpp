@@ -25,6 +25,7 @@ void eventCubeConnect(void *pv, unsigned id) {
 	startLoad((UID)id);
 
 	if (g_gamestate & 2) {
+		lostCount--;
 		if (g_gamestate & 4) {
 			//user is binded
 			//TODO change uid
@@ -42,6 +43,7 @@ void eventCubeConnect(void *pv, unsigned id) {
 void eventCubeLost(void *pv, unsigned id) {
 	LOG("Cube lost: #%d\n", id);
 	if (g_gamestate & 2) {
+		lostCount++;
 		if (g_gamestate & 4) {
 			//user is binded
 			//TODO change uid
@@ -91,6 +93,7 @@ inline void drawbar(PLAYERMASK ids, uint8_t p) {
 
 bool loadingCycle(bool displayall) {
 	static uint8_t counter;
+	static uint8_t laststate = 255;
 	
 	bool loading = !isLoadFinish();
 
@@ -110,7 +113,11 @@ bool loadingCycle(bool displayall) {
 
 	if (loading) {
 		uint8_t state = g_loader.averageProgress(128);
-		drawbar(displayall ? CubeSet::connected().mask() : assetsLoadUID, state);
+		if (laststate != state) {
+			drawbar(displayall ? CubeSet::connected().mask() : assetsLoadUID, state);
+			laststate = state;
+		}
+		
 	}
 	return loading;
 }
@@ -139,7 +146,7 @@ void Bootstrap(void) {
 	g_loaderconfig.append(MainSlot, BootstrapGroup);
 	g_loaderconfig.append(MainSlot, BootstrapGroup2);
 	g_loaderconfig.append(MainSlot, MenuGroup);
-	if (startLoad(playerOn)) {
+	if (startLoad(CubeSet::connected().mask())) {
 		g_gamestate |= 1;
 		while (loadingCycle(true)) {
 			System::paint();

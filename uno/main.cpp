@@ -51,6 +51,13 @@ void main() {
 	saveSettings();
 	g_gamestate &= ~8;
 	typeName();
+	g_gamestate |= 4;
+	PairLoop();
+
+	for (uint8_t i = 0; i < 12; i++) {
+		player[i].vid.initMode(BG0_SPR_BG1);
+	}
+
 	{
 		bool loading = startLoad(CubeSet::connected().mask());
 		if (loading && !isLoadFinish()) {
@@ -62,6 +69,20 @@ void main() {
 			while (loadingCycle(true)) {
 				System::paint();
 			}
+		}
+	}
+
+	{
+		CubeSet cubes = CubeSet::connected();
+		uint8_t count = cubes.count();
+		unsigned i;
+		while (cubes.clearFirst(i)) {
+			player[i].cid.detachVideoBuffer();
+		}
+		//TODO
+		for (uint8_t i = 0; i < count; i++) {
+			player[i].cid = i;
+			player[i].vid.attach(player[i].cid);
 		}
 	}
 

@@ -36,12 +36,10 @@ uint8_t GameMenuNewgame(bool canresume) {
 	uint8_t item;
 
 	while (m.pollEvent(&e)) {
-		if (!(playerOn & (0x80000000 >> g_mastercube))) {
+		if (!CubeSet::connected().test(g_mastercube)) {
 			//cube lost
-			CubeSet cubes;
-			cubes.setMask(playerOn);
 			unsigned i;
-			cubes.findFirst(i);
+			CubeSet::connected().findFirst(i);
 			g_mastercube = i;
 			return GameMenuNewgame(canresume);
 		}
@@ -129,12 +127,10 @@ uint8_t GameMenuSettings() {
 	bool cubefit = true;//false if cubehave < need
 
 	while (m.pollEvent(&e)) {
-		if (!(playerOn & (0x80000000 >> g_mastercube))) {
+		if (!CubeSet::connected().test(g_mastercube)) {
 			//cube lost
-			CubeSet cubes;
-			cubes.setMask(playerOn);
 			unsigned i;
-			cubes.findFirst(i);
+			CubeSet::connected().findFirst(i);
 			g_mastercube = i;
 			return GameMenuSettings();
 		}
@@ -214,7 +210,7 @@ uint8_t GameMenuSettings() {
 	//System::setCubeRange(playercount_disp + 2);
 
 	//loop until all cubes are connected/disconnected
-	playerCount_set = playercount_disp + 2;
+	UID playerCount_set = playercount_disp + 2;
 	while (playerCount > playerCount_set) {
 		System::paint();
 	}

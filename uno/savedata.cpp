@@ -37,18 +37,14 @@ typedef struct {
 bool saveGamestate(void) {
 	Game_save save;
 
+	save.winmode = winmode;
+	save.winscore = winscore;
 	save.playercount = playerCount;
 
-	CubeSet cubes;
-	cubes.setMask(playerOn);
-	unsigned i, n = 0;
-	while (cubes.clearFirst(i)) {
-		memcpy((uint8_t *)save.user[n].name, (uint8_t *)player[n].name, sizeof(player[n].name));
-		save.user[n].score = player[n].score;
-		n++;
+	for (UID i = 0; i < playerCount; i++) {
+		memcpy8((uint8_t *)save.user[i].name, (uint8_t *)player[i].name, sizeof(player[i].name));
+		save.user[i].score = player[i].score;
 	}
-	ASSERT(n == playerCount);
-	
 
 	int ret = so_gamestate.write(&save, (sizeof(Game_save) - sizeof(Player_save) * 12) + playerCount * sizeof(Player_save));
 
