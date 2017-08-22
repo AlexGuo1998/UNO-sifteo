@@ -39,6 +39,21 @@ static void unpair(UID *rightplayer, UID i, bool r) {
 	}
 }
 
+void clearPairLoop(UID i) {
+	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
+
+	ASSERT(player[i].vid.mode() == BG0_ROM);
+	player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
+	player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", color);
+	player[i].vid.bg0rom.text(vec(2, 2), "pair a loop", color);
+	player[i].vid.bg0rom.text(vec(2, 7), player[i].name, color);
+	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
+	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
+	player[i].vid.bg0rom.plot(vec(0, 7), BG0ROMDrawable::charTile('-', color));
+	player[i].vid.bg0rom.plot(vec(15, 7), BG0ROMDrawable::charTile('-', color));
+	player[i].vid.bg0rom.plot(vec(15, 9), BG0ROMDrawable::charTile('>', color));
+}
+
 void PairLoop(void) {
 	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
 	UID rightplayer[12];
@@ -48,20 +63,10 @@ void PairLoop(void) {
 	PLAYERMASK lastmask = CubeSet::connected().mask();
 
 	for (uint8_t i = 0; i < 12; i++) {
-		ASSERT(player[i].vid.mode() == BG0_ROM);
-		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
-		player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", color);
-		player[i].vid.bg0rom.text(vec(2, 2), "pair a loop", color);
-		player[i].vid.bg0rom.text(vec(2, 7), player[i].name, color);
-		player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
-		player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
-		player[i].vid.bg0rom.plot(vec(0, 7), BG0ROMDrawable::charTile('-', color));
-		player[i].vid.bg0rom.plot(vec(15, 7), BG0ROMDrawable::charTile('-', color));
-		player[i].vid.bg0rom.plot(vec(15, 9), BG0ROMDrawable::charTile('>', color));
+		clearPairLoop(i);
 	}
 
 	do {
-		//TODO ...
 		System::paint();
 
 		LOG("r:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", rightplayer[0], rightplayer[1], rightplayer[2], rightplayer[3], rightplayer[4], rightplayer[5], rightplayer[6], rightplayer[7], rightplayer[8], rightplayer[9], rightplayer[10], rightplayer[11]);
@@ -71,7 +76,7 @@ void PairLoop(void) {
 		if (cubes.mask() != lastmask) {
 			CubeSet lost;
 			lost.setMask(lastmask & ~cubes.mask());
-			while (cubes.clearFirst(i)) {
+			while (lost.clearFirst(i)) {
 				unpair(rightplayer, i, true);
 				unpair(rightplayer, i, false);				
 			}
@@ -81,7 +86,7 @@ void PairLoop(void) {
 		while (cubes.clearFirst(i)) {
 			CubeID right = Neighborhood(i).cubeAt(RIGHT);
 			if (right.isDefined() && Neighborhood(right).cubeAt(LEFT) == i && rightplayer[i] != right) {
-				LOG("Pair:%d,%d", i, (int)right);
+				LOG("Pair:%d,%d\n", i, (int)right);
 				
 				unpair(rightplayer, i, true);
 				unpair(rightplayer, right, false);
@@ -96,7 +101,6 @@ void PairLoop(void) {
 			}
 		}
 
-		//ASSERT(playerOn == CubeSet::connected().mask());//?
 		running = false;
 		cubes = CubeSet::connected();
 		
@@ -121,9 +125,89 @@ void PairLoop(void) {
 
 	} while (running);
 
+
+	UID pos[12]; //pos[newuid] = olduid
+
+	//fill pos[]
+	{
+		unsigned startplayer;
+		CubeSet::connected().findFirst(startplayer);
+		UID nowplayer = startplayer;
+		uint8_t index = 0;
+		do {
+			pos[index] = nowplayer;
+			nowplayer = rightplayer[nowplayer];
+			index++;
+		} while (nowplayer != startplayer);
+	}
+
+	uint8_t count = CubeSet::connected().count();
+
 	//ending
+	{
+		unsigned startplayer;
+		uint8_t starty = (12 - count) >> 1;
+		CubeSet::connected().findFirst(startplayer);
+		for (uint8_t i = 0; i < 12; i++) {
+			player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
+			for (uint8_t index = 0; index < count; index++) {
+				UID nowplayer = pos[index];
+				player[i].vid.bg0rom.text(vec<int>(2, starty + index), player[nowplayer].name, color);
+				if (nowplayer == i) {
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + index), BG0ROMDrawable::charTile('-', color));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + index), BG0ROMDrawable::charTile('-', color));
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', color));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', color));
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', color));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', color));
+				}
+			}
 
+			player[i].vid.bg0rom.text(vec(3, 13), "Touch to", color);
+			player[i].vid.bg0rom.text(vec(2, 14), "continue...", color);
+		}
+	}
 
+	{
+		CubeSet ok;
+		do {
+			System::paint();
+			
+			unsigned i;
+			CubeSet cubes = CubeSet::connected();
+
+			while (cubes.clearFirst(i)) {
+				if (!ok.test(i) && CubeID(i).isTouching()) {
+					ok.mark(i);
+					player[i].vid.bg0rom.fill(vec(2, 13), vec(11, 2), BG0ROMDrawable::charTile(' ', color));
+				}
+			}
+			running = (ok.count() != CubeSet::connected().count());
+		} while (running);
+	}
+
+	//detach vid
+	{
+		unsigned i;
+		CubeSet cubes = CubeSet::connected();
+		while (cubes.clearFirst(i)) {
+			player[i].cid.detachVideoBuffer();
+		}
+	}
+
+	//re-attach
+	{
+		char namebuffer[sizeof(player[0].name)];
+		for (uint8_t i = 0; i < count; i++) {
+			player[i].cid = pos[i];
+			player[i].vid.attach(player[i].cid);
+			if (pos[i] != i) {
+				memcpy8((uint8_t *)namebuffer, (uint8_t *)player[i].name, sizeof(namebuffer));
+				memcpy8((uint8_t *)player[i].name, (uint8_t *)player[pos[i]].name, sizeof(namebuffer));
+				memcpy8((uint8_t *)player[pos[i]].name, (uint8_t *)namebuffer, sizeof(namebuffer));
+			}
+		}
+	}
 }
 
 

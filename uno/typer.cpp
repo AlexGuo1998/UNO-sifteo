@@ -175,12 +175,11 @@ void typeName(void) {
 	bool running;
 	do {
 		System::paint();
-		if (lostCount) {
+		if (!lostMask.empty()) {
 			running = true;
 		} else {
 			running = false;
-			CubeSet cubes;
-			cubes.setMask(playerOn);
+			CubeSet cubes = CubeSet::connected();
 			unsigned i;
 			while (cubes.clearFirst(i)) {
 				if (typer[i].state) {

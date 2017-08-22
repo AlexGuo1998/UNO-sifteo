@@ -213,8 +213,7 @@ uint8_t GameMenuSettings() {
 	UID playerCount_set = playercount_disp + 2;
 	while (playerCount > playerCount_set) {
 		System::paint();
-	}
-	g_gamestate |= 2;
+	}	
 	
 	return 0;
 }
