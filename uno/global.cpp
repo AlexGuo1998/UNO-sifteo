@@ -16,7 +16,7 @@ AssetLoader g_loader;
 AssetConfiguration<4> g_loaderconfig;
 
 UID g_mastercube;
-Player player[12];
+Player player[PLAYER_MAX];
 UID playerCount;
 CubeSet lostMask;
 

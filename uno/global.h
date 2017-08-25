@@ -7,6 +7,8 @@ using namespace Sifteo;
 
 #include "typedef.h"
 
+#define PLAYER_MAX CUBE_ALLOCATION
+
 extern Random g_random;
 
 extern TimeStep g_frameclock;
@@ -17,7 +19,7 @@ extern AssetLoader g_loader;
 extern AssetConfiguration<4> g_loaderconfig;
 
 extern UID g_mastercube; //显示菜单的方块
-extern Player player[12]; //所有玩家，bind之后只使用0~playercount-1
+extern Player player[PLAYER_MAX]; //所有玩家，bind之后只使用0~playercount-1
 extern UID playerCount;
 extern CubeSet lostMask;
 

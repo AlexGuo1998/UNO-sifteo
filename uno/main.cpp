@@ -18,7 +18,7 @@ static Metadata M = Metadata()
 	.title("UNO!")
 	.package("com.alexguo1998.uno", "0.1")
 	.icon(Icon)
-	.cubeRange(2, 12);
+	.cubeRange(2, PLAYER_MAX);
 
 
 
@@ -54,7 +54,7 @@ void main() {
 
 		//DEBUG: input name automatically in sim_debug
 		if (System::isDebug() && System::isSimDebug()) {
-			for (UID i = 0; i < 12; i++) {
+			for (UID i = 0; i < PLAYER_MAX; i++) {
 				player[i].vid.initMode(BG0_ROM);
 				player[i].name[0] = 'A' + i;
 				player[i].name[1] = '\0';
@@ -67,7 +67,7 @@ void main() {
 		PairLoop();
 		g_gamestate = 2 | 4;
 
-		for (UID i = 0; i < 12; i++) {
+		for (UID i = 0; i < PLAYER_MAX; i++) {
 			player[i].vid.initMode(BG0_SPR_BG1);
 		}
 
@@ -93,7 +93,7 @@ void main() {
 			//determine if the game is over
 			{
 				bool finished;
-				uint16_t winscore_true = winscore ? winscore * 50 + 50 : 0;
+				int16_t winscore_true = winscore ? winscore * 50 + 50 : 0;
 				if (winmode) {
 					//TODO calc for elimination
 				} else {

@@ -7,7 +7,7 @@
 
 #define INIT_CARD_COUNT 7
 
-void clearPairLoop(UID i);
+void clearPairLoopDisp(UID i);
 
 //玩家形成一个环
 void PairLoop(void);

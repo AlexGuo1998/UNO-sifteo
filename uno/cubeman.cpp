@@ -35,7 +35,7 @@ void eventCubeConnect(void *pv, unsigned id) {
 			lostMask.clearFirst(i);
 			if (i != id) {
 				memcpy8((uint8_t *)player[id].name, (uint8_t *)player[i].name, sizeof(player[i].name));
-				clearPairLoop(i);
+				clearPairLoopDisp(i);
 			}
 		} else {
 			//user is not binded (typing name)
@@ -138,10 +138,10 @@ bool loadingCycle(bool displayall) {
 
 
 void Bootstrap(void) {
-	System::setCubeRange(2, 12);
+	System::setCubeRange(2, PLAYER_MAX);
 	
 	//init
-	for (UID i = 0; i < 12; i++) {
+	for (UID i = 0; i < PLAYER_MAX; i++) {
 		player[i].cid = i;
 		player[i].vid.initMode(BG0_SPR_BG1);
 	}

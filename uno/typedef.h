@@ -28,5 +28,5 @@ typedef struct {
 	int16_t viewbuffer = -17;
 	uint8_t displaypart = 0;//0=full screen 1=top screen 2=bottom screen
 	char name[13];
-	uint16_t score;
+	int16_t score;
 } Player;

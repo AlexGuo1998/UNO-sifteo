@@ -20,13 +20,13 @@ static void unpair(UID *rightplayer, UID i, bool r) {
 		rightplayer[i] = -1;
 	} else {
 		right = i;
-		for (i = 0; i < 12; i++) {
+		for (i = 0; i < PLAYER_MAX; i++) {
 			if (rightplayer[i] == right) {
 				rightplayer[i] = -1;
 				break;
 			}
 		}
-		if (i == 12) i = -1;
+		if (i == PLAYER_MAX) i = -1;
 	}
 	
 	if (i != -1) {
@@ -38,7 +38,7 @@ static void unpair(UID *rightplayer, UID i, bool r) {
 	}
 }
 
-void clearPairLoop(UID i) {
+void clearPairLoopDisp(UID i) {
 	ASSERT(player[i].vid.mode() == BG0_ROM);
 	player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 	player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", BG0ROM_offcolor);
@@ -52,14 +52,14 @@ void clearPairLoop(UID i) {
 }
 
 void PairLoop(void) {
-	UID rightplayer[12];
+	UID rightplayer[PLAYER_MAX];
 	memset8((uint8_t *)rightplayer, -1, sizeof(rightplayer));
 	
 	bool running;
 	PLAYERMASK lastmask = CubeSet::connected().mask();
 
-	for (UID i = 0; i < 12; i++) {
-		clearPairLoop(i);
+	for (UID i = 0; i < PLAYER_MAX; i++) {
+		clearPairLoopDisp(i);
 	}
 
 	do {
@@ -120,7 +120,7 @@ void PairLoop(void) {
 	} while (running);
 
 
-	UID pos[12]; //pos[newuid] = olduid
+	UID pos[PLAYER_MAX]; //pos[newuid] = olduid
 
 	//fill pos[]
 	{
@@ -142,7 +142,7 @@ void PairLoop(void) {
 		unsigned startplayer;
 		uint8_t starty = (12 - count) >> 1;
 		CubeSet::connected().findFirst(startplayer);
-		for (UID i = 0; i < 12; i++) {
+		for (UID i = 0; i < PLAYER_MAX; i++) {
 			player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 			for (UID index = 0; index < count; index++) {
 				UID nowplayer = pos[index];

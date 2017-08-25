@@ -16,15 +16,14 @@ StoredObject so_gamestate = StoredObject(1);
 
 typedef struct {
 	char name[13];
-	uint16_t score;
-	
+	int16_t score;
 } Player_save;
 
 typedef struct {
 	bool winmode;
 	uint8_t winscore;//index only
 	uint8_t playercount;
-	Player_save user[12];
+	Player_save user[PLAYER_MAX];
 } Game_save;
 
 typedef struct {
@@ -46,9 +45,9 @@ bool saveGamestate(void) {
 		save.user[i].score = player[i].score;
 	}
 
-	int ret = so_gamestate.write(&save, (sizeof(Game_save) - sizeof(Player_save) * 12) + playerCount * sizeof(Player_save));
+	int ret = so_gamestate.write(&save, (sizeof(Game_save) - sizeof(Player_save) * PLAYER_MAX) + playerCount * sizeof(Player_save));
 
-	ASSERT(ret < 0 || ret == (sizeof(Game_save) - sizeof(Player_save) * 12) + playerCount * sizeof(Player_save));
+	ASSERT(ret < 0 || ret == (sizeof(Game_save) - sizeof(Player_save) * PLAYER_MAX) + playerCount * sizeof(Player_save));
 	return (ret >= 0);
 }
 

@@ -108,7 +108,7 @@ static inline void onTouch(UID id) {
 		if (c > 4) {//normal
 			uint8_t i = 0;
 			while (player[id].name[i]) i++;
-			if (i >= 12) return;
+			if (i >= sizeof(player[id].name) - 1) return;
 			player[id].name[i] = c; player[id].name[i + 1] = 0;
 			player[id].vid.bg0rom.plot(vec(i + 2, texty), BG0ROMDrawable::charTile(c, BG0ROM_offcolor));
 			if (typer[id].shift) {
@@ -153,11 +153,11 @@ static void onTouchMaster(void *p, unsigned id) {
 }
 
 void typeName(void) {
-	Typer typerlist[12];
+	Typer typerlist[PLAYER_MAX];
 	typer = typerlist;
 
 	//init
-	for (UID i = 0; i < 12; i++) {
+	for (UID i = 0; i < PLAYER_MAX; i++) {
 		player[i].vid.initMode(BG0_ROM);
 		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 		player[i].vid.bg0rom.text(vec(2, 1), "Please input", BG0ROM_offcolor);
