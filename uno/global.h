@@ -34,4 +34,4 @@ extern uint8_t winscore; //index only 0=single 1=100 2=150 etc.
 extern uint8_t g_gamestate;
 
 const BG0ROMDrawable::Palette BG0ROM_offcolor = BG0ROMDrawable::WHITE_ON_GREEN;
-const BG0ROMDrawable::Palette BG0ROM_oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE
+const BG0ROMDrawable::Palette BG0ROM_oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE;
