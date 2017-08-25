@@ -31,8 +31,6 @@ static const char keymask[2][4][13] = {
 
 static const char OKCancelLbl[2][7] = {"  OK  ", "Cancel"};
 
-static const BG0ROMDrawable::Palette oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE, offcolor = BG0ROMDrawable::WHITE_ON_GREEN;
-
 static inline void changeShift(UID id) {
 	typer[id].shift ^= 1;
 	typerRepaint(id);
@@ -44,12 +42,12 @@ static inline void changeCaps(UID id) {
 }
 
 static inline void clearBoard(UID id) {
-	player[id].vid.bg0rom.fill(vec(startx - 1, starty), vec(13, 4), BG0ROMDrawable::charTile(' ', offcolor));
+	player[id].vid.bg0rom.fill(vec(startx - 1, starty), vec(13, 4), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 }
 
 static inline void printOKCancel(UID id) {
-	player[id].vid.bg0rom.text(vec(startx, starty + 2), OKCancelLbl[0], typer[id].state & 0x04 ? offcolor : oncolor);
-	player[id].vid.bg0rom.text(vec(startx + 6, starty + 2), OKCancelLbl[1], typer[id].state & 0x04 ? oncolor : offcolor);
+	player[id].vid.bg0rom.text(vec(startx, starty + 2), OKCancelLbl[0], typer[id].state & 0x04 ? BG0ROM_offcolor : BG0ROM_oncolor);
+	player[id].vid.bg0rom.text(vec(startx + 6, starty + 2), OKCancelLbl[1], typer[id].state & 0x04 ? BG0ROM_oncolor : BG0ROM_offcolor);
 }
 
 static inline void onMove(UID id) {
@@ -83,11 +81,11 @@ static inline void onMove(UID id) {
 		if (typer[id].nowx != newx || typer[id].nowy != newy) {
 			player[id].vid.bg0rom.plot(
 				vec(typer[id].nowx + startx, typer[id].nowy + starty),
-				BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][typer[id].nowy][typer[id].nowx], offcolor)
+				BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][typer[id].nowy][typer[id].nowx], BG0ROM_offcolor)
 			);
 			player[id].vid.bg0rom.plot(
 				vec(newx + startx, newy + starty),
-				BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][newy][newx], oncolor)
+				BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][newy][newx], BG0ROM_oncolor)
 			);
 			typer[id].nowx = newx; typer[id].nowy = newy;
 		}
@@ -112,7 +110,7 @@ static inline void onTouch(UID id) {
 			while (player[id].name[i]) i++;
 			if (i >= 12) return;
 			player[id].name[i] = c; player[id].name[i + 1] = 0;
-			player[id].vid.bg0rom.plot(vec(i + 2, texty), BG0ROMDrawable::charTile(c, offcolor));
+			player[id].vid.bg0rom.plot(vec(i + 2, texty), BG0ROMDrawable::charTile(c, BG0ROM_offcolor));
 			if (typer[id].shift) {
 				changeShift(id);
 			}
@@ -126,11 +124,11 @@ static inline void onTouch(UID id) {
 				while (player[id].name[i]) i++;
 				if (i == 0) return;
 				player[id].name[i - 1] = 0;
-				player[id].vid.bg0rom.plot(vec((i + 1), texty), BG0ROMDrawable::charTile(' ', offcolor));
+				player[id].vid.bg0rom.plot(vec((i + 1), texty), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 			} else {// 4
 				typer[id].state = 6; //confirm
 				clearBoard(id);
-				player[id].vid.bg0rom.text(vec(startx + 2, starty), "Is it OK?", offcolor);
+				player[id].vid.bg0rom.text(vec(startx + 2, starty), "Is it OK?", BG0ROM_offcolor);
 				printOKCancel(id);
 			}
 		}
@@ -141,8 +139,8 @@ static inline void onTouch(UID id) {
 	} else {//l
 		typer[id].state = 0;
 		clearBoard(id);
-		player[id].vid.bg0rom.text(vec(0, starty), "Wait while", offcolor);
-		player[id].vid.bg0rom.text(vec(0, starty + 1), "others typing...", offcolor);
+		player[id].vid.bg0rom.text(vec(0, starty), "Wait while", BG0ROM_offcolor);
+		player[id].vid.bg0rom.text(vec(0, starty + 1), "others typing...", BG0ROM_offcolor);
 	}
 }
 
@@ -161,9 +159,9 @@ void typeName(void) {
 	//init
 	for (uint8_t i = 0; i < 12; i++) {
 		player[i].vid.initMode(BG0_ROM);
-		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', offcolor));
-		player[i].vid.bg0rom.text(vec(2, 1), "Please input", offcolor);
-		player[i].vid.bg0rom.text(vec(3, 2), "your name:", offcolor);
+		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
+		player[i].vid.bg0rom.text(vec(2, 1), "Please input", BG0ROM_offcolor);
+		player[i].vid.bg0rom.text(vec(3, 2), "your name:", BG0ROM_offcolor);
 		typerRepaint(i);
 		typerlist[i].state = 1;
 	}
@@ -199,20 +197,20 @@ void typeName(void) {
 
 void typerRepaint(UID id) {
 	for (uint8_t i = 0; i < 4; i++) {
-		player[id].vid.bg0rom.text(vec(startx, starty + i), keys[typer[id].shift ^ typer[id].capslock][i], offcolor);
+		player[id].vid.bg0rom.text(vec(startx, starty + i), keys[typer[id].shift ^ typer[id].capslock][i], BG0ROM_offcolor);
 	}
 	player[id].vid.bg0rom.plot(
 		vec(typer[id].nowx + startx, typer[id].nowy + starty),
-		BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][typer[id].nowy][typer[id].nowx], oncolor)
+		BG0ROMDrawable::charTile(keys[typer[id].shift ^ typer[id].capslock][typer[id].nowy][typer[id].nowx], BG0ROM_oncolor)
 	);
-	player[id].vid.bg0rom.text(vec(2, texty), player[id].name, offcolor);
-	player[id].vid.bg0rom.plot(vec(startx - 1, starty + 2), BG0ROMDrawable::charTile(typer[id].capslock ? '\x8E' : ' ', offcolor));
-	player[id].vid.bg0rom.plot(vec(startx - 1, starty + 3), BG0ROMDrawable::charTile(typer[id].shift ? '\x8E' : ' ', offcolor));
+	player[id].vid.bg0rom.text(vec(2, texty), player[id].name, BG0ROM_offcolor);
+	player[id].vid.bg0rom.plot(vec(startx - 1, starty + 2), BG0ROMDrawable::charTile(typer[id].capslock ? '\x8E' : ' ', BG0ROM_offcolor));
+	player[id].vid.bg0rom.plot(vec(startx - 1, starty + 3), BG0ROMDrawable::charTile(typer[id].shift ? '\x8E' : ' ', BG0ROM_offcolor));
 }
 
 void typerClear(UID id) {
 	memset8((uint8_t *)player[id].name, 0, sizeof(player[id].name));
-	player[id].vid.bg0rom.fill(vec(0, 4), vec(16, 6), BG0ROMDrawable::charTile(' ', offcolor));
+	player[id].vid.bg0rom.fill(vec(0, 4), vec(16, 6), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 	typer[id].state = 1;
 	typer[id].shift = 0;
 	typer[id].capslock = 0;

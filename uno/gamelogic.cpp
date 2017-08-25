@@ -14,7 +14,6 @@ static class TiltShakeRecognizer shake;
 
 //r: unpair this.right
 static void unpair(UID *rightplayer, UID i, bool r) {
-	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
 	UID right;
 	if (r) {
 		right = rightplayer[i];
@@ -31,31 +30,28 @@ static void unpair(UID *rightplayer, UID i, bool r) {
 	}
 	
 	if (i != -1) {
-		player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+		player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 	}
 
 	if (right != -1) {
-		player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
+		player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 	}
 }
 
 void clearPairLoop(UID i) {
-	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
-
 	ASSERT(player[i].vid.mode() == BG0_ROM);
-	player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
-	player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", color);
-	player[i].vid.bg0rom.text(vec(2, 2), "pair a loop", color);
-	player[i].vid.bg0rom.text(vec(2, 7), player[i].name, color);
-	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
-	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', color));
-	player[i].vid.bg0rom.plot(vec(0, 7), BG0ROMDrawable::charTile('-', color));
-	player[i].vid.bg0rom.plot(vec(15, 7), BG0ROMDrawable::charTile('-', color));
-	player[i].vid.bg0rom.plot(vec(15, 9), BG0ROMDrawable::charTile('>', color));
+	player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
+	player[i].vid.bg0rom.text(vec(2, 1), "Neighbor to", BG0ROM_offcolor);
+	player[i].vid.bg0rom.text(vec(2, 2), "pair a loop", BG0ROM_offcolor);
+	player[i].vid.bg0rom.text(vec(2, 7), player[i].name, BG0ROM_offcolor);
+	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', BG0ROM_offcolor));
+	player[i].vid.bg0rom.plot(vec(0, 5), BG0ROMDrawable::charTile('<', BG0ROM_offcolor));
+	player[i].vid.bg0rom.plot(vec(0, 7), BG0ROMDrawable::charTile('-', BG0ROM_offcolor));
+	player[i].vid.bg0rom.plot(vec(15, 7), BG0ROMDrawable::charTile('-', BG0ROM_offcolor));
+	player[i].vid.bg0rom.plot(vec(15, 9), BG0ROMDrawable::charTile('>', BG0ROM_offcolor));
 }
 
 void PairLoop(void) {
-	const BG0ROMDrawable::Palette color = BG0ROMDrawable::WHITE_ON_GREEN;
 	UID rightplayer[12];
 	memset8((uint8_t *)rightplayer, -1, sizeof(rightplayer));
 	
@@ -93,11 +89,11 @@ void PairLoop(void) {
 
 				rightplayer[i] = right;
 
-				player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
-				player[i].vid.bg0rom.text(vec(2, 9), player[right].name, color);
+				player[i].vid.bg0rom.fill(vec(2, 9), vec(12, 1), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
+				player[i].vid.bg0rom.text(vec(2, 9), player[right].name, BG0ROM_offcolor);
 
-				player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', color));
-				player[right].vid.bg0rom.text(vec(2, 5), player[i].name, color);
+				player[right].vid.bg0rom.fill(vec(2, 5), vec(12, 1), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
+				player[right].vid.bg0rom.text(vec(2, 5), player[i].name, BG0ROM_offcolor);
 			}
 		}
 
@@ -149,22 +145,22 @@ void PairLoop(void) {
 		uint8_t starty = (12 - count) >> 1;
 		CubeSet::connected().findFirst(startplayer);
 		for (uint8_t i = 0; i < 12; i++) {
-			player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', color));
+			player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 			for (uint8_t index = 0; index < count; index++) {
 				UID nowplayer = pos[index];
-				player[i].vid.bg0rom.text(vec<int>(2, starty + index), player[nowplayer].name, color);
+				player[i].vid.bg0rom.text(vec<int>(2, starty + index), player[nowplayer].name, BG0ROM_offcolor);
 				if (nowplayer == i) {
-					player[i].vid.bg0rom.plot(vec<int>(0, starty + index), BG0ROMDrawable::charTile('-', color));
-					player[i].vid.bg0rom.plot(vec<int>(15, starty + index), BG0ROMDrawable::charTile('-', color));
-					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', color));
-					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', color));
-					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', color));
-					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', color));
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + index), BG0ROMDrawable::charTile('-', BG0ROM_offcolor));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + index), BG0ROMDrawable::charTile('-', BG0ROM_offcolor));
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', BG0ROM_offcolor));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + count - 1) % count), BG0ROMDrawable::charTile('<', BG0ROM_offcolor));
+					player[i].vid.bg0rom.plot(vec<int>(0, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', BG0ROM_offcolor));
+					player[i].vid.bg0rom.plot(vec<int>(15, starty + (index + 1) % count), BG0ROMDrawable::charTile('>', BG0ROM_offcolor));
 				}
 			}
 
-			player[i].vid.bg0rom.text(vec(3, 13), "Touch to", color);
-			player[i].vid.bg0rom.text(vec(2, 14), "continue...", color);
+			player[i].vid.bg0rom.text(vec(3, 13), "Touch to", BG0ROM_offcolor);
+			player[i].vid.bg0rom.text(vec(2, 14), "continue...", BG0ROM_offcolor);
 		}
 	}
 
@@ -179,7 +175,7 @@ void PairLoop(void) {
 			while (cubes.clearFirst(i)) {
 				if (!ok.test(i) && CubeID(i).isTouching()) {
 					ok.mark(i);
-					player[i].vid.bg0rom.fill(vec(2, 13), vec(11, 2), BG0ROMDrawable::charTile(' ', color));
+					player[i].vid.bg0rom.fill(vec(2, 13), vec(11, 2), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 				}
 			}
 			running = (ok.count() != CubeSet::connected().count());

@@ -32,3 +32,6 @@ extern uint8_t winscore; //index only 0=single 1=100 2=150 etc.
 //8 = should display boot_finished
 //16= pairing
 extern uint8_t g_gamestate;
+
+const BG0ROMDrawable::Palette BG0ROM_offcolor = BG0ROMDrawable::WHITE_ON_GREEN;
+const BG0ROMDrawable::Palette BG0ROM_oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE
