@@ -16,11 +16,9 @@ AssetLoader g_loader;
 AssetConfiguration<4> g_loaderconfig;
 
 UID g_mastercube;
-PLAYERMASK playerOn = 0;
 Player player[12];
 UID playerCount = 0;
-UID playerCount_set;
-UID playermap[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+CubeSet lostMask;
 
 bool winmode = 0;
 uint8_t winscore = 0;

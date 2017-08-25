@@ -103,97 +103,103 @@ static inline void printNoPan(UID uid, int8_t pancount) {
 	changeWindow(uid, 0);
 }
 
-void animUpdateScroll(PLAYERMASK mask, UID popupPlayer) {	
+//option: 0=popup 1=skip
+void animUpdateScroll(UID spPlayer, uint8_t option) {
 	static UID lastuid = -1;
 	static uint16_t animationBuffer = 0;
 	static uint8_t blinkcount = 0;
 	
-	if (lastuid != popupPlayer) {
-		lastuid = popupPlayer;
+	if (lastuid != spPlayer) {
+		lastuid = spPlayer;
 		animationBuffer = 0;
 		blinkcount = 0;
 	}
 
-	for (UID i = 0; i < 12; i++) {
-		if (mask & (PLAYERMASK)(0x80000000 >> i)) {
-			player[i].scroller.update(player[i].cid.accel().x);
-			bool doUpdatePan = player[i].scroller.status || player[i].scroller.flag;//true if we have to printpan
+	for (UID i = 0; i < playerCount; i++) {
+		
+		if (option && i == spPlayer) {
+			continue;
+		}
+
+		player[i].scroller.update(player[i].cid.accel().x);
+		bool doUpdatePan = player[i].scroller.status || player[i].scroller.flag;//true if we have to printpan
 	
-			if (i == popupPlayer) {
-				//blink
-				if (!player[i].scroller.locked) {
+		if (i == spPlayer) {//option == 0
+			//blink
+			if (!player[i].scroller.locked) {
+				bool nowl = player[i].scroller.position >= 64;
+				bool nowr = player[i].scroller.position <= player[i].scroller.max - 64;
+
+				uint8_t state;
+				if (nowl || nowr) {
 					//2 arrows blinking
 					blinkcount = (blinkcount + 1) & 0xDF; //32 loop
-					uint8_t state = blinkcount & 0x1F;
+					state = blinkcount & 0x1F;
 					if (state > 16) state = 32 - state;
 					state >>= 2;
-
-					bool nowl = player[i].scroller.position >= 64;
-					bool nowr = player[i].scroller.position <= player[i].scroller.max - 64;
-
-					if (nowl) {
-						if (!(blinkcount & 0x80)) {
-							blinkcount = (blinkcount & 0x7F) | 0x80;
-							player[i].vid.sprites[0].setImage(ArrowLRPic, 0);
-						}
-						//move
-						player[i].vid.sprites[0].move(state, 0);
-					} else {
-						if (blinkcount & 0x80) {
-							blinkcount = blinkcount & 0x7F;
-							player[i].vid.sprites[0].hide();
-						}
-					}
-
-					if (nowr) {
-						if (!(blinkcount & 0x40)) {
-							blinkcount = (blinkcount & 0xBF) | 0x40;
-							player[i].vid.sprites[1].setImage(ArrowLRPic, 1);
-						}
-						//move
-						player[i].vid.sprites[1].move(128 - 8 - state, 0);
-					} else {
-						if (blinkcount & 0x40) {
-							blinkcount = blinkcount & 0xBF;
-							player[i].vid.sprites[1].hide();
-						}
-					}
 				}
-				
-				
-				if (player[i].scroller.flag) { //state changed
-					//reset animation buffer
 					
-					animationBuffer = 0;
-
-					if (player[i].scroller.flag & 1) {	//just stopping: fill popup layer
-						CARDID popupcardid;
-						bool ret = getPlayerCard(i, player[i].scroller.stop_count, &popupcardid);
-						ASSERT(ret);
-						player[i].vid.bg1.image(vec(0, 0), CardPic, popupcardid);
-						player[i].vid.bg1.setPanning(vec(-48, -8));
-					} else {							//just starting: erase popup layer
-						player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-						player[i].vid.bg1.setPanning(vec(-48, -8));//avoid popup card flashing
+				if (nowl) {
+					if (!(blinkcount & 0x80)) {
+						blinkcount = (blinkcount & 0x7F) | 0x80;
+						player[i].vid.sprites[0].setImage(ArrowLRPic, 0);
 					}
-				} else {	//same state, same user, play animation
-					if (!player[i].scroller.status) {//stopped
-						if (animationBuffer < 500) {
-							//LOG_INT(animationBuffer);
-							animationBuffer += g_frameclock.delta().milliseconds();
-							if (animationBuffer < 500) {
-								player[i].vid.bg1.setPanning(vec(-48, -(8 + ((0 - 8) * animationBuffer / 500))));
-							} else {
-								player[i].vid.bg1.setPanning(vec(-48, 0));
-							}
-						}
+					//move
+					player[i].vid.sprites[0].move(state, 0);
+				} else {
+					if (blinkcount & 0x80) {
+						blinkcount = blinkcount & 0x7F;
+						player[i].vid.sprites[0].hide();
+					}
+				}
+
+				if (nowr) {
+					if (!(blinkcount & 0x40)) {
+						blinkcount = (blinkcount & 0xBF) | 0x40;
+						player[i].vid.sprites[1].setImage(ArrowLRPic, 1);
+					}
+					//move
+					player[i].vid.sprites[1].move(128 - 8 - state, 0);
+				} else {
+					if (blinkcount & 0x40) {
+						blinkcount = blinkcount & 0xBF;
+						player[i].vid.sprites[1].hide();
 					}
 				}
 			}
 
-			if (doUpdatePan) {
-				printPan(i);
+			if (player[i].scroller.flag) { //state changed
+				//reset animation buffer
+					
+				animationBuffer = 0;
+
+				if (player[i].scroller.flag & 1) {	//just stopping: fill popup layer
+					CARDID popupcardid;
+					bool ret = getPlayerCard(i, player[i].scroller.stop_count, &popupcardid);
+					ASSERT(ret);
+					player[i].vid.bg1.image(vec(0, 0), CardPic, popupcardid);
+					player[i].vid.bg1.setPanning(vec(-48, -8));
+				} else {							//just starting: erase popup layer
+					player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+					player[i].vid.bg1.setPanning(vec(-48, -8));//avoid popup card flashing
+				}
+			} else {	//same state, same user, play animation
+				if (!player[i].scroller.status) {//stopped
+					if (animationBuffer < 500) {
+						//LOG_INT(animationBuffer);
+						animationBuffer += g_frameclock.delta().milliseconds();
+						if (animationBuffer < 500) {
+							player[i].vid.bg1.setPanning(vec(-48, -(8 + ((0 - 8) * animationBuffer / 500))));
+						} else {
+							player[i].vid.bg1.setPanning(vec(-48, 0));
+						}
+					}
+				}
 			}
+		}
+
+		if (doUpdatePan) {
+			printPan(i);
 		}
 	}
 }
@@ -205,21 +211,19 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 	//const int allframes = 750;
 	const int allframes = 300;
 
-	ASSERT(playerOn & (PLAYERMASK)(0x80000000 >> drawuid));
-	
+	ASSERT(drawuid < playerCount);
+
 	//init mode
 	//System::finish();
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			if (i == drawuid) {
-				//reset pan for receiveing user, because we have to access the under layer
-				printNoPan(i, player[i].scroller.maxcount);
-			} else {
-				//upper window
-				changeWindow(i, 1);
-			}
-			player[i].vid.bg1.image(vec(0, 0), CardPic, 54);
+	for (UID i = 0; i < playerCount; i++) {
+		if (i == drawuid) {
+			//reset pan for receiveing user, because we have to access the under layer
+			printNoPan(i, player[i].scroller.maxcount);
+		} else {
+			//upper window
+			changeWindow(i, 1);
 		}
+		player[i].vid.bg1.image(vec(0, 0), CardPic, 54);
 	}
 
 	System::paint();
@@ -231,17 +235,15 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 	while (frames < allframes) {
 		Int2 panothers = vec<int>(-24, -24 - ((-48 - 24) * frames) / allframes);
 
-		for (UID i = 0; i < 12; i++) {
-			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				if (i == drawuid) {
-					//pan for receving user
-					player[i].vid.bg1.setPanning(
-						vec(-24 - ((48 - 24) * frames) / allframes,
-							-24 - ((88 - 24) * frames) / allframes)
-					);
-				} else {
-					player[i].vid.bg1.setPanning(panothers);
-				}
+		for (UID i = 0; i < playerCount; i++) {
+			if (i == drawuid) {
+				//pan for receving user
+				player[i].vid.bg1.setPanning(
+					vec(-24 - ((48 - 24) * frames) / allframes,
+						-24 - ((88 - 24) * frames) / allframes)
+				);
+			} else {
+				player[i].vid.bg1.setPanning(panothers);
 			}
 		}
 		System::paint();
@@ -251,25 +253,23 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 	}
 
 	//clean all
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			if (i != drawuid) {
-				//others: erase bg1
-				player[i].vid.bg1.setPanning(vec(-24, 48));
+	for (UID i = 0; i < playerCount; i++) {
+		if (i != drawuid) {
+			//others: erase bg1
+			player[i].vid.bg1.setPanning(vec(-24, 48));
+			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+		} else {
+			//receiving user
+			player[i].scroller.init(player[i].scroller.maxcount + 1, player[i].scroller.max + 16);
+			//player[i].viewbuffer = -17;
+			if (printbg0) {
+				//print to bg0 then erase bg1
+				player[i].vid.bg0.image(vec(6, 11), vec(4, 5), CardPic, vec(0, 0), cardid);
 				player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
 			} else {
-				//receiving user
-				player[i].scroller.init(player[i].scroller.maxcount + 1, player[i].scroller.max + 16);
-				//player[i].viewbuffer = -17;
-				if (printbg0) {
-					//print to bg0 then erase bg1
-					player[i].vid.bg0.image(vec(6, 11), vec(4, 5), CardPic, vec(0, 0), cardid);
-					player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-				} else {
-					//set bg1 pos
-					player[i].vid.bg1.setPanning(vec(-48, -88));
-					player[i].vid.bg1.image(vec(0, 0), CardPic, cardid);
-				}
+				//set bg1 pos
+				player[i].vid.bg1.setPanning(vec(-48, -88));
+				player[i].vid.bg1.image(vec(0, 0), CardPic, cardid);
 			}
 		}
 	}
@@ -281,29 +281,27 @@ void animDrawCard(UID drawuid, CARDID cardid, bool printbg0) {
 void animPlayCard(UID playuid, CARDID cardid) {
 	const int allframes = 400;
 	
-	ASSERT(playerOn & (PLAYERMASK)(0x80000000 >> playuid));
+	ASSERT(playuid < playerCount);
 	int pan0y; //original pany for playing user
 
 	System::finish();
 
 	//init mode
 	
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			if (i == playuid) {
-				//full window
-				printNoPan(i, player[playuid].scroller.stop_count);
+	for (UID i = 0; i < playerCount; i++) {
+		if (i == playuid) {
+			//full window
+			printNoPan(i, player[playuid].scroller.stop_count);
 
-				pan0y = player[i].vid.bg1.getPanning().y - 80;//add windows pan
-				ASSERT(player[i].vid.bg1.getPanning().x == -48);
-				//no need to paint this card again
-			} else {
-				//upper window
-				changeWindow(i, 1);
+			pan0y = player[i].vid.bg1.getPanning().y - 80;//add windows pan
+			ASSERT(player[i].vid.bg1.getPanning().x == -48);
+			//no need to paint this card again
+		} else {
+			//upper window
+			changeWindow(i, 1);
 
-				//paint card
-				player[i].vid.bg1.image(vec(0, 0), CardPic, cardid);
-			}
+			//paint card
+			player[i].vid.bg1.image(vec(0, 0), CardPic, cardid);
 		}
 	}
 	animShowCardCount(playuid);
@@ -316,17 +314,15 @@ void animPlayCard(UID playuid, CARDID cardid) {
 	//other:72,-48 -> 72, 24
 	while (frames < allframes) {
 		Int2 panothers = vec<int>(-72, 48 - ((24 - -48) * frames) / allframes);//pan for other users
-		for (UID i = 0; i < 12; i++) {
-			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				if (i == playuid) {
-					//pan for receving user
-					player[i].vid.bg1.setPanning(
-						vec(-48 - ((72 - 48) * frames) / allframes,
-							pan0y + ((-24 - pan0y) * frames) / allframes)
-					);
-				} else {
-					player[i].vid.bg1.setPanning(panothers);
-				}
+		for (UID i = 0; i < playerCount; i++) {
+			if (i == playuid) {
+				//pan for receving user
+				player[i].vid.bg1.setPanning(
+					vec(-48 - ((72 - 48) * frames) / allframes,
+						pan0y + ((-24 - pan0y) * frames) / allframes)
+				);
+			} else {
+				player[i].vid.bg1.setPanning(panothers);
 			}
 		}
 		System::paint();
@@ -336,11 +332,9 @@ void animPlayCard(UID playuid, CARDID cardid) {
 	}
 
 	//clean all
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
-			player[i].vid.bg0.image(vec(9, 3), CardPic, cardid);
-		}
+	for (UID i = 0; i < playerCount; i++) {
+		player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+		player[i].vid.bg0.image(vec(9, 3), CardPic, cardid);
 	}
 	System::paint();
 }
@@ -380,11 +374,9 @@ void animDropDown(uint8_t count, uint8_t *x) {
 			}
 		}
 
-		for (UID i = 0; i < 12; i++) {
-			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				for (uint8_t j = 0; j < count; j++) {
-					player[i].vid.sprites[j].move(x[j], y[j]);
-				}
+		for (UID i = 0; i < playerCount; i++) {
+			for (uint8_t j = 0; j < count; j++) {
+				player[i].vid.sprites[j].move(x[j], y[j]);
 			}
 		}
 		System::paint();
@@ -394,11 +386,9 @@ void animDropDown(uint8_t count, uint8_t *x) {
 	}
 
 	//on - fin
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			for (uint8_t j = 0; j < count; j++) {
-				player[i].vid.sprites[j].move(x[j], endy);
-			}
+	for (UID i = 0; i < playerCount; i++) {
+		for (uint8_t j = 0; j < count; j++) {
+			player[i].vid.sprites[j].move(x[j], endy);
 		}
 	}
 
@@ -418,11 +408,9 @@ void animDropDown(uint8_t count, uint8_t *x) {
 	while (frames < offtime) {
 		//todo
 		uint8_t y = -16;
-		for (UID i = 0; i < 12; i++) {
-			if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-				for (uint8_t j = 0; j < count; j++) {
-					player[i].vid.sprites[j].move(x[j], y);
-				}
+		for (UID i = 0; i < playerCount; i++) {
+			for (uint8_t j = 0; j < count; j++) {
+				player[i].vid.sprites[j].move(x[j], y);
 			}
 		}
 		System::paint();
@@ -432,11 +420,9 @@ void animDropDown(uint8_t count, uint8_t *x) {
 #endif // 0
 
 	//clean all
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			for (uint8_t j = 0; j < count; j++) {
-				player[i].vid.sprites[j].hide();
-			}
+	for (UID i = 0; i < playerCount; i++) {
+		for (uint8_t j = 0; j < count; j++) {
+			player[i].vid.sprites[j].hide();
 		}
 	}
 }
@@ -455,24 +441,22 @@ void animDrawN(uint8_t n) {
 	}
 	
 	//init mode
-	for (UID i = 0; i < 12; i++) {
-		if (playerOn & (PLAYERMASK)(0x80000000 >> i)) {
-			//part window
-			changeWindow(i, 1);
+	for (UID i = 0; i < playerCount; i++) {
+		//part window
+		changeWindow(i, 1);
 
-			//paint card(?) TODO
-			player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
+		//paint card(?) TODO
+		player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
 			
-			player[i].vid.sprites[0].move(x[0], -16);
-			player[i].vid.sprites[1].move(x[1], -16);
-			player[i].vid.sprites[0].setImage(NumbersPic, 10);// '+'
-			if (count == 2) {
-				player[i].vid.sprites[1].setImage(NumbersPic, n);
-			} else {
-				player[i].vid.sprites[2].move(x[2], -16);
-				player[i].vid.sprites[1].setImage(NumbersPic, n / 10);
-				player[i].vid.sprites[2].setImage(NumbersPic, n % 10);
-			}
+		player[i].vid.sprites[0].move(x[0], -16);
+		player[i].vid.sprites[1].move(x[1], -16);
+		player[i].vid.sprites[0].setImage(NumbersPic, 10);// '+'
+		if (count == 2) {
+			player[i].vid.sprites[1].setImage(NumbersPic, n);
+		} else {
+			player[i].vid.sprites[2].move(x[2], -16);
+			player[i].vid.sprites[1].setImage(NumbersPic, n / 10);
+			player[i].vid.sprites[2].setImage(NumbersPic, n % 10);
 		}
 	}
 
@@ -490,22 +474,15 @@ static inline UInt2 getUserReaminingPos(uint8_t index) {
 
 //uid = uid of card changed player
 void animShowCardCount(UID uid) {
-	ASSERT(playerOn != 0);
-	uint8_t pos = 0; //position of changed user
-	while (playermap[pos] != uid) pos++;
 	uint8_t index = 0;
 	uint8_t cardcount = player[uid].scroller.maxcount;
 	if (cardcount > 10) cardcount = 10;
 
-	for (uint8_t i = 0; i < 12; i++) {
-		uid = playermap[pos];
-		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
-			//changeWindow(uid, 1);
-			ASSERT(player[uid].displaypart < 2);
-			player[uid].vid.bg0.image(getUserReaminingPos(index), CardsRemainingPic, cardcount);
-			index++;
-		}
-		pos = (pos + 11) % 12;
+	for (uint8_t i = 0; i < playerCount; i++) {
+		ASSERT(player[uid].displaypart < 2);
+		player[uid].vid.bg0.image(getUserReaminingPos(index), CardsRemainingPic, cardcount);
+		index++;
+		uid = (uid ? uid : playerCount) - 1;
 	}
 }
 
@@ -518,35 +495,24 @@ void animShowNowPlayer(UID uid, bool reverse) {
 		lastuid = -1;
 		return;
 	}
-	ASSERT(playerOn != 0);
 	
-	uint8_t pos, index;
+	uint8_t index;
 	if (lastuid >= 0) {
-		pos = 0; //position of nowplayer
 		index = 0;
-		while (playermap[pos] != lastuid) pos++;
-		for (uint8_t i = 0; i < 12; i++) {
-			lastuid = playermap[pos];
-			if (playerOn & (PLAYERMASK)(0x80000000 >> lastuid)) {
-				changeWindow(lastuid, 1);
-				player[lastuid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), BackGroundPic, g_random.randrange(8));
-				index++;
-			}
-			pos = (pos + 11) % 12;
+		for (uint8_t i = 0; i < playerCount; i++) {
+			changeWindow(lastuid, 1);
+			player[lastuid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), BackGroundPic, g_random.randrange(8));
+			index++;
+			lastuid = (lastuid ? lastuid : playerCount) - 1;
 		}
 	}
 	lastuid = uid;
-	pos = 0; //position of nowplayer
 	index = 0;
-	while (playermap[pos] != lastuid) pos++;
-
-	for (uint8_t i = 0; i < 12; i++) {
-		uid = playermap[pos];
-		if (playerOn & (PLAYERMASK)(0x80000000 >> uid)) {
-			ASSERT(player[uid].displaypart < 2);
-			player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (index ? (unsigned)reverse : (unsigned)!reverse));
-			index++;
-		}
-		pos = (pos + 11) % 12;
+	
+	for (uint8_t i = 0; i < playerCount; i++) {
+		ASSERT(player[uid].displaypart < 2);
+		player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (index ? (unsigned)reverse : (unsigned)!reverse));
+		index++;
+		uid = (uid ? uid : playerCount) - 1;
 	}	
 }

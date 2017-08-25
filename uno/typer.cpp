@@ -30,7 +30,6 @@ static const char keymask[2][4][13] = {
 };
 
 static const char OKCancelLbl[2][7] = {"  OK  ", "Cancel"};
-static const char blank[] = "             ";
 
 static const BG0ROMDrawable::Palette oncolor = BG0ROMDrawable::LTBLUE_ON_DKBLUE, offcolor = BG0ROMDrawable::WHITE_ON_GREEN;
 
@@ -45,9 +44,7 @@ static inline void changeCaps(UID id) {
 }
 
 static inline void clearBoard(UID id) {
-	for (uint8_t i = 0; i < 4; i++) { 
-		player[id].vid.bg0rom.text(vec(startx - 1, starty + i), &blank[0], offcolor);
-	}
+	player[id].vid.bg0rom.fill(vec(startx - 1, starty), vec(13, 4), BG0ROMDrawable::charTile(' ', offcolor));
 }
 
 static inline void printOKCancel(UID id) {
@@ -178,12 +175,11 @@ void typeName(void) {
 	bool running;
 	do {
 		System::paint();
-		if (playerCount != playerCount_set) {
+		if (!lostMask.empty()) {
 			running = true;
 		} else {
 			running = false;
-			CubeSet cubes;
-			cubes.setMask(playerOn);
+			CubeSet cubes = CubeSet::connected();
 			unsigned i;
 			while (cubes.clearFirst(i)) {
 				if (typer[i].state) {
@@ -195,11 +191,9 @@ void typeName(void) {
 	} while (running);
 	
 	//end
+	System::setCubeRange(playerCount);
 	Events::cubeTouch.unset();
 	Events::cubeAccelChange.unset();
-	for (uint8_t i = 0; i < 12; i++) {
-		player[i].vid.initMode(BG0_SPR_BG1);
-	}
 	typer = NULL;
 }
 
@@ -217,8 +211,8 @@ void typerRepaint(UID id) {
 }
 
 void typerClear(UID id) {
-	memset((uint8_t *)player[id].name, 0, sizeof(player[id].name));
-	player[id].vid.bg0rom.text(vec(2, texty), &blank[1], offcolor);
+	memset8((uint8_t *)player[id].name, 0, sizeof(player[id].name));
+	player[id].vid.bg0rom.fill(vec(0, 4), vec(16, 6), BG0ROMDrawable::charTile(' ', offcolor));
 	typer[id].state = 1;
 	typer[id].shift = 0;
 	typer[id].capslock = 0;

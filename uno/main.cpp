@@ -49,11 +49,31 @@ void main() {
 	GameMenuNewgame(false);//todo
 	GameMenuSettings();
 	saveSettings();
-	g_gamestate &= ~8;
-	typeName();
+	g_gamestate = 2;
+	
+	//DEBUG: input name automatically in sim_debug
+	if (System::isDebug() && System::isSimDebug()) {
+		for (uint8_t i = 0; i < 12; i++) {
+			player[i].vid.initMode(BG0_ROM);
+			player[i].name[0] = 'A' + i;
+			player[i].name[1] = '\0';
+		}
+	} else {
+		typeName();
+	}
+
+	g_gamestate = 2 | 16;
+	PairLoop();
+	g_gamestate = 2 | 4;
+
+	for (uint8_t i = 0; i < 12; i++) {
+		player[i].vid.initMode(BG0_SPR_BG1);
+	}
+
 	{
 		bool loading = startLoad(CubeSet::connected().mask());
 		if (loading && !isLoadFinish()) {
+			g_gamestate = 1 | 2 | 4;
 			paintDefBg(g_mastercube);
 			player[g_mastercube].vid.bg0.image(vec(3, 5), GameLabelPic, 0);
 			player[g_mastercube].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(8, 1)));
@@ -62,8 +82,11 @@ void main() {
 			while (loadingCycle(true)) {
 				System::paint();
 			}
+			g_gamestate = 2 | 4;
 		}
 	}
+
+	//TODO calc score
 
 	PlaySingleGame();
 

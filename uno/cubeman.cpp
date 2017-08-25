@@ -8,13 +8,13 @@
 
 #include "animation.h"
 #include "typer.h"
+#include "gamelogic.h"
 
 bool bs2installed = false;
 PLAYERMASK assetsLoadUID = 0;
 
 
 void eventCubeConnect(void *pv, unsigned id) {
-	//player[id].vid.initMode(BG0_SPR_BG1);
 	player[id].vid.attach(id);
 
 	LOG("Cube connect: #%d\n", id);
@@ -27,34 +27,52 @@ void eventCubeConnect(void *pv, unsigned id) {
 	if (g_gamestate & 2) {
 		if (g_gamestate & 4) {
 			//user is binded
-			//TODO change uid
+			//TODO select user, change uid
+		} else if (g_gamestate & 16) {
+			//pairing loop
+			//copy username, reset
+			unsigned i;
+			lostMask.clearFirst(i);
+			if (i != id) {
+				memcpy8((uint8_t *)player[id].name, (uint8_t *)player[i].name, sizeof(player[i].name));
+				clearPairLoop(i);
+			}
 		} else {
 			//user is not binded (typing name)
+			if (lostMask.test(id)) {
+				lostMask.clear(id);
+			} else {
+				unsigned i;
+				lostMask.clearFirst(i);
+			}
 			playerCount++;
-			playerOn |= (PLAYERMASK)(0x80000000 >> id);
 		}
 	} else {
 		playerCount++;
-		playerOn |= (PLAYERMASK)(0x80000000 >> id);
 	}
 }
 
 void eventCubeLost(void *pv, unsigned id) {
 	LOG("Cube lost: #%d\n", id);
 	if (g_gamestate & 2) {
+		
 		if (g_gamestate & 4) {
 			//user is binded
-			//TODO change uid
+			//TODO mark user, blank screen
+		} else if (g_gamestate & 16) {
+			//pairing loop
+			ASSERT(!lostMask.test(id));
+			lostMask.mark(id);
 		} else {
-			//user is not binded
+			//user is not binded (typing name)
+			ASSERT(!lostMask.test(id));
+			lostMask.mark(id);
 			playerCount--;
-			playerOn &= ~(PLAYERMASK)(0x80000000 >> id);
 			ASSERT(typer);
 			typerClear(id);
 		}
 	} else {
 		playerCount--;
-		playerOn &= ~(PLAYERMASK)(0x80000000 >> id);
 	}
 }
 
@@ -91,6 +109,7 @@ inline void drawbar(PLAYERMASK ids, uint8_t p) {
 
 bool loadingCycle(bool displayall) {
 	static uint8_t counter;
+	static uint8_t laststate = 255;
 	
 	bool loading = !isLoadFinish();
 
@@ -110,7 +129,11 @@ bool loadingCycle(bool displayall) {
 
 	if (loading) {
 		uint8_t state = g_loader.averageProgress(128);
-		drawbar(displayall ? CubeSet::connected().mask() : assetsLoadUID, state);
+		if (laststate != state) {
+			drawbar(displayall ? CubeSet::connected().mask() : assetsLoadUID, state);
+			laststate = state;
+		}
+		
 	}
 	return loading;
 }
@@ -124,10 +147,9 @@ void Bootstrap(void) {
 	}
 
 	//load bootstrap for connected cubes
-	//when loading, new added cubes are ignored (are loaded later)
+	//when loading, new added cubes are loaded automatically
 
 	CubeSet cubes = CubeSet::connected();
-	playerOn = cubes.mask();
 	unsigned i;
 	while (cubes.clearFirst(i)) {
 		playerCount++;
@@ -139,13 +161,12 @@ void Bootstrap(void) {
 	g_loaderconfig.append(MainSlot, BootstrapGroup);
 	g_loaderconfig.append(MainSlot, BootstrapGroup2);
 	g_loaderconfig.append(MainSlot, MenuGroup);
-	if (startLoad(playerOn)) {
-		g_gamestate |= 1;
+	if (startLoad(CubeSet::connected().mask())) {
+		g_gamestate = 1;
 		while (loadingCycle(true)) {
 			System::paint();
 		}
-		g_gamestate &= ~1;
-		g_gamestate |= 8;
+		g_gamestate = 8;
 		{
 			CubeSet cubes = CubeSet::connected();
 			unsigned i;
@@ -158,7 +179,7 @@ void Bootstrap(void) {
 		}
 	} else {
 		//loaded
-		g_gamestate |= 8;
+		g_gamestate = 8;
 		CubeSet cubes = CubeSet::connected();
 		unsigned i;
 		cubes.clearFirst(i);
@@ -166,6 +187,4 @@ void Bootstrap(void) {
 			eventLoadFinish(NULL, i);
 		}
 	}
-
-	//g_gamestate = 2;
 }
