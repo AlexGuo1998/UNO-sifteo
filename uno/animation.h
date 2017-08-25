@@ -99,7 +99,7 @@ inline void changeWindow(UID uid, uint8_t mode) {
 
 void animDropDown(uint8_t count, uint8_t *x);
 
-void animDrawN(uint8_t n);
+void animDrawN(CARDCOUNT n);
 
 inline void animSkip(void) {
 	uint8_t x = 48;

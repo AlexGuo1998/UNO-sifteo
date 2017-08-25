@@ -17,7 +17,7 @@ AssetConfiguration<4> g_loaderconfig;
 
 UID g_mastercube;
 Player player[12];
-UID playerCount = 0;
+UID playerCount;
 CubeSet lostMask;
 
 bool winmode = 0;

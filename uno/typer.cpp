@@ -157,7 +157,7 @@ void typeName(void) {
 	typer = typerlist;
 
 	//init
-	for (uint8_t i = 0; i < 12; i++) {
+	for (UID i = 0; i < 12; i++) {
 		player[i].vid.initMode(BG0_ROM);
 		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 		player[i].vid.bg0rom.text(vec(2, 1), "Please input", BG0ROM_offcolor);

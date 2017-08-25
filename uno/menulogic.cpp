@@ -109,7 +109,7 @@ uint8_t GameMenuNewgame(bool canresume) {
 	}
 }
 
-uint8_t GameMenuSettings() {
+void GameMenuSettings() {
 	uint8_t playercount_disp = playerCount - 2;
 
 	MenuItem items[5] = {
@@ -213,8 +213,6 @@ uint8_t GameMenuSettings() {
 	UID playerCount_set = playercount_disp + 2;
 	while (playerCount > playerCount_set) {
 		System::paint();
-	}	
-	
-	return 0;
+	}
 }
 

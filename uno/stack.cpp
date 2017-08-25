@@ -69,7 +69,7 @@ CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, C
 }
 
 void movePlayer(UID oldplayer, UID newplayer) {
-	for (uint8_t i = 0; i < 108; i++) {
+	for (CARDCOUNT i = 0; i < 108; i++) {
 		if (stack[i].player == oldplayer) {
 			stack[i].player == newplayer;
 		}

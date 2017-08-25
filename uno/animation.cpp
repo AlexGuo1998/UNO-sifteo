@@ -20,8 +20,8 @@ static inline void printPan(UID uid) {
 	int16_t loadrowfirst;//第一个加载的列
 	int16_t loadrowcount;//要加载的列数
 
-	int8_t loadcardfirst;//要加载的第一张牌的序号
-	int8_t loadcardcount;//要加载的牌的数量，1~5张
+	CARDCOUNT loadcardfirst;//要加载的第一张牌的序号
+	CARDCOUNT loadcardcount;//要加载的牌的数量，1~5张
 
 	int16_t buffered = player[uid].viewbuffer;
 	int16_t newbuffered;
@@ -361,7 +361,7 @@ void animDropDown(uint8_t count, uint8_t *x) {
 	while (frames < (ontime - delaytime) + count * delaytime) {
 		int8_t y[3];
 		//calc y
-		for (uint8_t j = 0; j < 3; j++) {
+		for (uint8_t j = 0; j < count; j++) {
 			int frames_j = (signed)frames - j * delaytime;
 			if (frames_j <= 0) {
 				y[j] = -16;
@@ -427,7 +427,7 @@ void animDropDown(uint8_t count, uint8_t *x) {
 	}
 }
 
-void animDrawN(uint8_t n) {
+void animDrawN(CARDCOUNT n) {
 	uint8_t count, x[3];
 	if (n < 10) {
 		count = 2;
@@ -463,7 +463,7 @@ void animDrawN(uint8_t n) {
 	animDropDown(count, x);
 }
 
-static inline UInt2 getUserReaminingPos(uint8_t index) {
+static inline UInt2 getUserReaminingPos(UID index) {
 	//TODO 
 	if (index == 0) {
 		return vec<unsigned>(0, 8);
@@ -474,14 +474,12 @@ static inline UInt2 getUserReaminingPos(uint8_t index) {
 
 //uid = uid of card changed player
 void animShowCardCount(UID uid) {
-	uint8_t index = 0;
-	uint8_t cardcount = player[uid].scroller.maxcount;
+	CARDCOUNT cardcount = player[uid].scroller.maxcount;
 	if (cardcount > 10) cardcount = 10;
 
-	for (uint8_t i = 0; i < playerCount; i++) {
+	for (UID i = 0; i < playerCount; i++) {
 		ASSERT(player[uid].displaypart < 2);
-		player[uid].vid.bg0.image(getUserReaminingPos(index), CardsRemainingPic, cardcount);
-		index++;
+		player[uid].vid.bg0.image(getUserReaminingPos(i), CardsRemainingPic, cardcount);
 		uid = (uid ? uid : playerCount) - 1;
 	}
 }
@@ -496,23 +494,18 @@ void animShowNowPlayer(UID uid, bool reverse) {
 		return;
 	}
 	
-	uint8_t index;
 	if (lastuid >= 0) {
-		index = 0;
-		for (uint8_t i = 0; i < playerCount; i++) {
+		for (UID i = 0; i < playerCount; i++) {
 			changeWindow(lastuid, 1);
-			player[lastuid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), BackGroundPic, g_random.randrange(8));
-			index++;
+			player[lastuid].vid.bg0.image(getUserReaminingPos(i) + vec(0, 1), BackGroundPic, g_random.randrange(8));
 			lastuid = (lastuid ? lastuid : playerCount) - 1;
 		}
 	}
 	lastuid = uid;
-	index = 0;
 	
-	for (uint8_t i = 0; i < playerCount; i++) {
+	for (UID i = 0; i < playerCount; i++) {
 		ASSERT(player[uid].displaypart < 2);
-		player[uid].vid.bg0.image(getUserReaminingPos(index) + vec(0, 1), ArrowNowPlayerPic, (index ? (unsigned)reverse : (unsigned)!reverse));
-		index++;
+		player[uid].vid.bg0.image(getUserReaminingPos(i) + vec(0, 1), ArrowNowPlayerPic, (i ? (unsigned)reverse : (unsigned)!reverse));
 		uid = (uid ? uid : playerCount) - 1;
 	}	
 }

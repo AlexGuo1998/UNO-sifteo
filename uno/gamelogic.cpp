@@ -58,14 +58,12 @@ void PairLoop(void) {
 	bool running;
 	PLAYERMASK lastmask = CubeSet::connected().mask();
 
-	for (uint8_t i = 0; i < 12; i++) {
+	for (UID i = 0; i < 12; i++) {
 		clearPairLoop(i);
 	}
 
 	do {
 		System::paint();
-
-		LOG("r:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", rightplayer[0], rightplayer[1], rightplayer[2], rightplayer[3], rightplayer[4], rightplayer[5], rightplayer[6], rightplayer[7], rightplayer[8], rightplayer[9], rightplayer[10], rightplayer[11]);
 
 		unsigned i;
 		CubeSet cubes = CubeSet::connected();
@@ -129,7 +127,7 @@ void PairLoop(void) {
 		unsigned startplayer;
 		CubeSet::connected().findFirst(startplayer);
 		UID nowplayer = startplayer;
-		uint8_t index = 0;
+		UID index = 0;
 		do {
 			pos[index] = nowplayer;
 			nowplayer = rightplayer[nowplayer];
@@ -137,16 +135,16 @@ void PairLoop(void) {
 		} while (nowplayer != startplayer);
 	}
 
-	uint8_t count = CubeSet::connected().count();
+	UID count = CubeSet::connected().count();
 
 	//ending
 	{
 		unsigned startplayer;
 		uint8_t starty = (12 - count) >> 1;
 		CubeSet::connected().findFirst(startplayer);
-		for (uint8_t i = 0; i < 12; i++) {
+		for (UID i = 0; i < 12; i++) {
 			player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
-			for (uint8_t index = 0; index < count; index++) {
+			for (UID index = 0; index < count; index++) {
 				UID nowplayer = pos[index];
 				player[i].vid.bg0rom.text(vec<int>(2, starty + index), player[nowplayer].name, BG0ROM_offcolor);
 				if (nowplayer == i) {
@@ -194,7 +192,7 @@ void PairLoop(void) {
 	//re-attach
 	{
 		char namebuffer[sizeof(player[0].name)];
-		for (uint8_t i = 0; i < count; i++) {
+		for (UID i = 0; i < count; i++) {
 			player[i].cid = pos[i];
 			player[i].vid.attach(player[i].cid);
 			if (pos[i] != i) {
@@ -405,7 +403,7 @@ void PlaySingleGame(void) {
 	Events::cubeRefresh.set(eventRepaintScreen);
 
 	//init graphic
-	for (uint8_t i = 0; i < playerCount; i++) {
+	for (UID i = 0; i < playerCount; i++) {
 		player[i].vid.bg1.setMask(BG1Mask::filled(vec(0, 0), vec(4, 6)));
 		player[i].vid.bg1.image(vec(0, 0), BlankCard, 0);
 		paintDefBg(i);
@@ -423,7 +421,7 @@ void PlaySingleGame(void) {
 
 	//draw 7
 	ASSERT(nowplayer < playerCount);
-	for (uint8_t i = 0; i < INIT_CARD_COUNT; i++) {
+	for (CARDCOUNT i = 0; i < INIT_CARD_COUNT; i++) {
 		do {
 			animShowNowPlayer(nowplayer, reverse);
 			animDrawCard(nowplayer, drawOne(nowplayer), true);
@@ -465,7 +463,7 @@ void PlaySingleGame(void) {
 					player[nowplayer].cid.detachMotionBuffer();
 					
 					//popup
-					for (uint8_t i = 0; i < playerCount; i++) {
+					for (UID i = 0; i < playerCount; i++) {
 						changeWindow(i, 1);
 						player[i].vid.bg0.image(vec(13, 3), BubblePic, 0);
 						player[i].vid.bg0.image(vec(14, 4), WildColorPic, lastcolor);
@@ -484,14 +482,14 @@ void PlaySingleGame(void) {
 						if (validplay) {
 							//next player draw6
 							animDrawN(6);
-							for (uint8_t i = 0; i < 6; i++) {
+							for (CARDCOUNT i = 0; i < 6; i++) {
 								animDrawCard(nextplayer, drawOne(nextplayer), true);
 							}
 						} else {
 							//this player draw4
 							animShowNowPlayer(nowplayer, reverse);
 							animDrawN(4);
-							for (uint8_t i = 0; i < 4; i++) {
+							for (CARDCOUNT i = 0; i < 4; i++) {
 								animDrawCard(nowplayer, drawOne(nowplayer), true);
 							}
 							animShowNowPlayer(nextplayer, reverse);
@@ -499,7 +497,7 @@ void PlaySingleGame(void) {
 					} else {
 						//next player draw4
 						animDrawN(4);
-						for (uint8_t i = 0; i < 4; i++) {
+						for (CARDCOUNT i = 0; i < 4; i++) {
 							animDrawCard(nextplayer, drawOne(nextplayer), true);
 						}
 					}
@@ -551,7 +549,7 @@ void PlaySingleGame(void) {
 				{
 					UID oldplayer = nowplayer;
 					bool played = true;
-					uint8_t addcount = 0;
+					CARDCOUNT addcount = 0;
 					do {
 						played = false;
 						nowplayer = getNextPlayer(reverse, nowplayer);
@@ -589,7 +587,7 @@ void PlaySingleGame(void) {
 					
 					//draw n
 					animDrawN(addcount);
-					for (uint8_t i = 0; i < addcount; i++) {
+					for (CARDCOUNT i = 0; i < addcount; i++) {
 						animDrawCard(nowplayer, drawOne(nowplayer), true);
 					}
 
@@ -695,7 +693,7 @@ void PlaySingleGame(void) {
 
 				if (erasewild) {
 					//erase wild popup
-					for (uint8_t i = 0; i < playerCount; i++) {
+					for (UID i = 0; i < playerCount; i++) {
 						for (uint8_t x = 13; x < 16; x++) {
 							for (uint8_t y = 3; y < 8; y++) {
 								player[i].vid.bg0.image(vec(x, y), BackGroundPic, g_random.randrange(8));

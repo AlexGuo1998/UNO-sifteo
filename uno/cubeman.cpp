@@ -45,7 +45,6 @@ void eventCubeConnect(void *pv, unsigned id) {
 				unsigned i;
 				lostMask.clearFirst(i);
 			}
-			playerCount++;
 		}
 	} else {
 		playerCount++;
@@ -67,7 +66,6 @@ void eventCubeLost(void *pv, unsigned id) {
 			//user is not binded (typing name)
 			ASSERT(!lostMask.test(id));
 			lostMask.mark(id);
-			playerCount--;
 			ASSERT(typer);
 			typerClear(id);
 		}
@@ -140,24 +138,29 @@ bool loadingCycle(bool displayall) {
 
 
 void Bootstrap(void) {
+	System::setCubeRange(2, 12);
+	
 	//init
-	for (uint8_t i = 0; i < 12; i++) {
+	for (UID i = 0; i < 12; i++) {
 		player[i].cid = i;
 		player[i].vid.initMode(BG0_SPR_BG1);
 	}
 
 	//load bootstrap for connected cubes
 	//when loading, new added cubes are loaded automatically
-
-	CubeSet cubes = CubeSet::connected();
-	unsigned i;
-	while (cubes.clearFirst(i)) {
-		playerCount++;
-		player[i].vid.attach(i);
-		paintDefBg(i);
+	
+	{
+		playerCount = 0;
+		CubeSet cubes = CubeSet::connected();
+		unsigned i;
+		while (cubes.clearFirst(i)) {
+			playerCount++;
+			player[i].vid.attach(i);
+			paintDefBg(i);
+		}
 	}
 
-
+	g_loaderconfig.clear();
 	g_loaderconfig.append(MainSlot, BootstrapGroup);
 	g_loaderconfig.append(MainSlot, BootstrapGroup2);
 	g_loaderconfig.append(MainSlot, MenuGroup);

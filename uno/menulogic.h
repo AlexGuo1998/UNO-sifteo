@@ -5,4 +5,4 @@
 
 uint8_t GameMenuNewgame(bool canresume);
 
-uint8_t GameMenuSettings();
+void GameMenuSettings();
