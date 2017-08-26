@@ -2,10 +2,6 @@
 //对牌堆的操作，包括初始化，洗牌，抽牌，得到一个玩家拥有的牌，出牌
 
 #include "typedef.h"
-//#include <sifteo/macros.h>
-
-//extern Card stack[108];
-//extern CARDCOUNT stackNext;
 
 #define CARD_GETCOLOR(card)		((card) / 13)
 #define CARD_GETID(card)		((card) % 13)
@@ -33,7 +29,7 @@ CARDCOUNT gcStack(void);
 void suffleStack(CARDCOUNT start);
 
 //get n cards belong to one user
-CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, CARDID *retcardid/*, CARDCOUNT *retcardpos = NULL*/);
+CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, CARDID *retcardid);
 
 //move one player to another
 //TODO used when reload cubes
@@ -62,7 +58,7 @@ inline void resetStack(void) {
 	stackNext = 0;
 }
 
-//get card ccount belong to one user
+//get card count belong to one user
 inline CARDCOUNT getPlayerCardCount(UID player) {
 	extern Card stack[108];
 	extern CARDCOUNT stackNext;
@@ -117,19 +113,20 @@ inline CARDID drawOne(UID uid) {
 	return getid;
 }
 
-//play & discard 1 card from a user
-//TODO delete this function ?
-inline CARDID playOne(UID uid, CARDCOUNT n) {
-	extern Card stack[108];
-	CARDID id;
-	CARDCOUNT pos;
-	bool ret = getPlayerCard(uid, n, &id, &pos);
-	ASSERT(ret == true);
-	stack[pos].player = -1;//discard
-	return id;
-}
-
 inline void setOneCard(UID newuid, CARDCOUNT cardpos) {
 	extern Card stack[108];
 	stack[cardpos].player = newuid;//discard
+}
+
+inline SCORE getCardScore(CARDID cardid) {
+	if (CARD_ISWILD(cardid)) {
+		return 50;
+	} else {
+		uint8_t id = CARD_GETID(cardid);
+		if (id < 3) {
+			return 20;
+		} else {
+			return id - 3;
+		}
+	}
 }

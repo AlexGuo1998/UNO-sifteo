@@ -98,7 +98,7 @@ void main() {
 			//determine if the game is over
 			{
 				bool finished;
-				int16_t winscore_true = winscore ? winscore * 50 + 50 : 0;
+				SCORE winscore_true = winscore ? winscore * 50 + 50 : 0;
 				if (winmode) {
 					//TODO calc for elimination
 				} else {

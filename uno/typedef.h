@@ -8,6 +8,7 @@
 typedef int8_t		UID;
 typedef int8_t		CARDID; //-1 = nocard
 typedef int8_t		CARDCOUNT;
+typedef int16_t		SCORE;
 
 typedef _SYSCubeIDVector	PLAYERMASK; //player mask, 0x80000000 >> n
 
@@ -28,5 +29,5 @@ typedef struct {
 	int16_t viewbuffer = -17;
 	uint8_t displaypart = 0;//0=full screen 1=top screen 2=bottom screen
 	char name[13];
-	int16_t score;
+	SCORE score;
 } Player;

@@ -49,7 +49,7 @@ void suffleStack(CARDCOUNT start) {
 	}
 }
 
-CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, CARDID *retcardid/*, CARDCOUNT *retcardpos*/) {
+CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, CARDID *retcardid) {
 	//go through the list
 	CARDCOUNT i = 0;
 	for (;;) {
@@ -60,7 +60,6 @@ CARDCOUNT getPlayerCards(UID player, CARDCOUNT startcount, CARDCOUNT getcount, C
 			//LOG("HIT sc=%d\n", startcount);
 			if (startcount <= 0) {
 				retcardid[-startcount] = stack[i].id;
-				//if (retcardpos) retcardpos[-startcount] = i;
 			}
 			startcount--;
 		}

@@ -16,7 +16,7 @@ StoredObject so_gamestate = StoredObject(1);
 
 typedef struct {
 	char name[13];
-	int16_t score;
+	SCORE score;
 } Player_save;
 
 typedef struct {
