@@ -10,7 +10,13 @@ Random g_random = Random();
 TimeStep g_frameclock;
 
 AssetSlot MainSlot = AssetSlot::allocate()
-	.bootstrap(BootstrapGroup);
+	.bootstrap(BootstrapGroup)
+#ifdef _DEBUG
+	.bootstrap(BootstrapGroup2)
+	.bootstrap(MenuGroup)
+	.bootstrap(GameGroup)
+#endif
+;
 
 AssetLoader g_loader;
 AssetConfiguration<4> g_loaderconfig;

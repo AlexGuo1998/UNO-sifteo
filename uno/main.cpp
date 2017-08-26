@@ -53,15 +53,20 @@ void main() {
 		g_gamestate = 2;
 
 		//DEBUG: input name automatically in sim_debug
+#ifdef _DEBUG
 		if (System::isDebug() && System::isSimDebug()) {
+			char name[13] = {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','\0'};
 			for (UID i = 0; i < PLAYER_MAX; i++) {
 				player[i].vid.initMode(BG0_ROM);
-				player[i].name[0] = 'A' + i;
-				player[i].name[1] = '\0';
+				name[0] = 'A' + i;
+				memcpy8((uint8_t *)player[i].name, (uint8_t *)name, sizeof(player[i].name));
 			}
 		} else {
 			typeName();
 		}
+#else
+		typeName();
+#endif
 
 		g_gamestate = 2 | 16;
 		PairLoop();

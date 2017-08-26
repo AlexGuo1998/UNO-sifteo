@@ -1,5 +1,11 @@
 APP = uno
 
+ifeq ($(RELEASE),)
+    CFLAGS += -D _DEBUG
+endif
+
+CFLAGS += -D CUBE_ALLOCATION=12 # -D MENU_LOGS_ENABLED
+
 include $(SDK_DIR)/Makefile.defs
 
 OBJS = \
@@ -15,10 +21,8 @@ OBJS = \
 	typer.o \
 	main.o
 
-ASSETDEPS += *.png $(ASSETS).lua
+ASSETDEPS += *.png images/*.png images/*/*.png $(ASSETS).lua
 CDEPS += *.h
-
-CFLAGS += -D CUBE_ALLOCATION=12 # -D MENU_LOGS_ENABLED
 
 # build assets.html to proof stir-processed assets.
 # comment out to disable.

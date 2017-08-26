@@ -5,7 +5,11 @@
 #include <sifteo/cube.h>
 #include "scroller.h"
 
+#ifdef _DEBUG
+#define INIT_CARD_COUNT 1
+#else
 #define INIT_CARD_COUNT 7
+#endif
 
 void clearPairLoopDisp(UID i);
 
