@@ -17,10 +17,11 @@ void clearPairLoopDisp(UID i);
 void PairLoop(void);
 
 //单局游戏中
-void PlaySingleGame(void);
+//return winner UID
+UID PlaySingleGame(void);
 
 //单局游戏结束，显示计分，etc
-void EndSingle(void);
+void EndSingle(UID winner);
 
 //全部游戏结束，显示总分，etc
 void EndAll(void);

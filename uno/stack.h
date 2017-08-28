@@ -56,6 +56,9 @@ inline void resetStack(void) {
 	//suffile
 	suffleStack(0);
 	stackNext = 0;
+#ifdef _DEBUG
+	stack[1].id = 52; //for quick-finish
+#endif // _DEBUG
 }
 
 //get card count belong to one user

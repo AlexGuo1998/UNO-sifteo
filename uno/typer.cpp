@@ -123,7 +123,7 @@ static inline void onTouch(UID id) {
 				uint8_t i = 0;
 				while (player[id].name[i]) i++;
 				if (i == 0) return;
-				player[id].name[i - 1] = 0;
+				player[id].name[i - 1] = '\0';
 				player[id].vid.bg0rom.plot(vec((i + 1), texty), BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 			} else {// 4
 				typer[id].state = 6; //confirm
@@ -138,6 +138,11 @@ static inline void onTouch(UID id) {
 		typerRepaint(id);
 	} else {//l
 		typer[id].state = 0;
+		//fill blank chars with space
+		unsigned len = strnlen(player[id].name, sizeof(player[id].name));
+		ASSERT(len < sizeof(player[id].name));
+		memset8((uint8_t *)&player[id].name[len], ' ', sizeof(player[id].name) - 1 - len);
+		ASSERT(player[id].name[12] = '\0');
 		clearBoard(id);
 		player[id].vid.bg0rom.text(vec(0, starty), "Wait while", BG0ROM_offcolor);
 		player[id].vid.bg0rom.text(vec(0, starty + 1), "others typing...", BG0ROM_offcolor);
@@ -162,8 +167,7 @@ void typeName(void) {
 		player[i].vid.bg0rom.erase(BG0ROMDrawable::charTile(' ', BG0ROM_offcolor));
 		player[i].vid.bg0rom.text(vec(2, 1), "Please input", BG0ROM_offcolor);
 		player[i].vid.bg0rom.text(vec(3, 2), "your name:", BG0ROM_offcolor);
-		typerRepaint(i);
-		typerlist[i].state = 1;
+		typerClear(i);
 	}
 
 	Events::cubeTouch.set(onTouchMaster);

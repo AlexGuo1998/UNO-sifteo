@@ -33,8 +33,8 @@ The rule for UNO can be found on [Wikipedia](https://en.wikipedia.org/wiki/Uno_(
 
 ## TODOs
 
+*   Cubes add / remove in game
 *   `StoredObject` suppport
-*   ScoreBoard
 *   Better animation ("UNO!", skip, reverse)
 *   Music / voice
 
@@ -71,7 +71,7 @@ UNO游戏的规则可以在维基百科上找到（[英文版](https://en.wikipe
 
 ## TODOs
 
+*   游戏中的 Cube （方块）增加/减少
 *   `StoredObject` 支持（用于游戏保存）
-*   分数统计
 *   更好的动画效果（"UNO!"，跳过，反转）
 *   音乐/语音

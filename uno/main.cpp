@@ -74,6 +74,8 @@ void main() {
 
 		for (UID i = 0; i < PLAYER_MAX; i++) {
 			player[i].vid.initMode(BG0_SPR_BG1);
+			player[i].displaypart = 0;
+			player[i].score = 0;
 		}
 
 		{
@@ -93,8 +95,10 @@ void main() {
 		}
 
 		for (;;) {
-			PlaySingleGame();
-			EndSingle();
+			{
+				UID winner = PlaySingleGame();
+				EndSingle(winner);
+			}
 			//determine if the game is over
 			{
 				bool finished;
@@ -111,7 +115,7 @@ void main() {
 						}
 					}
 				}
-				finished = true; //TODO THIS IS FOR DEBUG ONLY
+				finished = false; //TODO THIS IS FOR DEBUG ONLY
 				if (finished) break;
 			}
 		}
